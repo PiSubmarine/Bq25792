@@ -13,6 +13,25 @@ namespace PiSubmarine::Bq25792
 
 		Reg00MinimalSystemVoltage regW;
 		regW.SetMinimalSystemVoltage(3250_mV);
-		ASSERT_EQ(regW.GetInternalBuffer()[0], 3);
+		ASSERT_EQ(regW.GetRegisterByteArray()[0], 3);
+	}
+
+	TEST(Bq25792, Reg03ChargeCurrentLimit)
+	{
+		constexpr std::array<uint8_t, 2> bytes{ 0x00, 101 };
+		Reg03ChargeCurrentLimit reg{ bytes };
+
+		auto value = reg.GetChargeCurrentLimit();
+		ASSERT_EQ(value, 1010_mA);
+
+		reg.SetChargeCurrentLimit(0_mA);
+		ASSERT_EQ(reg.GetChargeCurrentLimit(), 0_mA);
+		ASSERT_EQ(reg.GetRegisterByteArray()[0], 0);
+		ASSERT_EQ(reg.GetRegisterByteArray()[1], 0);
+
+		reg.SetChargeCurrentLimit(3250_mA);
+		ASSERT_EQ(reg.GetChargeCurrentLimit(), 3250_mA);
+		ASSERT_EQ(reg.GetRegisterByteArray()[0], 0x1);
+		ASSERT_EQ(reg.GetRegisterByteArray()[1], 0x45);
 	}
 }

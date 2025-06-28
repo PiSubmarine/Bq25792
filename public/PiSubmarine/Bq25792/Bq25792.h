@@ -69,7 +69,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::MinimalSystemVoltage, 1>::Register;
 
-		RegUtils::Field<uint8_t, 0, 6, RegUtils::Access::ReadWrite, GetSize()> VsysMin{ Data };
+		RegUtils::Field<uint8_t, 0, 6, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> VsysMin{ Data };
 
 		/// <summary>
 		/// Get minimal system voltage.
@@ -95,7 +95,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::ChargeVoltageLimit, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 11, RegUtils::Access::ReadWrite, GetSize()> Vreg{ Data };
+		RegUtils::Field<uint16_t, 0, 11, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Vreg{ Data };
 
 		/// <summary>
 		/// Gets battery target voltage.
@@ -121,7 +121,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::ChargeCurrentLimit, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 9, RegUtils::Access::ReadWrite, GetSize()> Ichg{ Data };
+		RegUtils::Field<uint16_t, 0, 9, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Ichg{ Data };
 
 		/// <summary>
 		/// Gets maxium charge current.
@@ -147,7 +147,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::InputVoltageLimit, 1>::Register;
 
-		RegUtils::Field<uint8_t, 0, 8, RegUtils::Access::ReadWrite, GetSize()> Vindpm{ Data };
+		RegUtils::Field<uint8_t, 0, 8, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Vindpm{ Data };
 
 		/// <summary>
 		/// Gets input voltage dynamic power management.
@@ -173,7 +173,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::InputCurrentLimit, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 9, RegUtils::Access::ReadWrite, GetSize()> Iindpm{ Data };
+		RegUtils::Field<uint16_t, 0, 9, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Iindpm{ Data };
 
 		/// <summary>
 		/// Gets input voltage dynamic power management.
@@ -207,8 +207,8 @@ namespace PiSubmarine::Bq25792
 			Percent71_4 = 3
 		};
 
-		RegUtils::Field<PrechargeVoltageThreholds, 6, 2, RegUtils::Access::ReadWrite, GetSize()> VbatLowv{ Data };
-		RegUtils::Field<uint8_t, 0, 6, RegUtils::Access::ReadWrite, GetSize()> Iprechg{ Data };
+		RegUtils::Field<PrechargeVoltageThreholds, 6, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> VbatLowv{ Data };
+		RegUtils::Field<uint8_t, 0, 6, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Iprechg{ Data };
 		
 		/// <summary>
 		/// Gets Precharge current limit. Range: 40mA - 2000mA, bit step size: 40mA.
@@ -234,8 +234,8 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::TerminationControl, 1>::Register;
 
-		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize()> RegRst{ Data };
-		RegUtils::Field<uint8_t, 0, 5, RegUtils::Access::ReadWrite, GetSize()> Iterm{ Data };
+		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> RegRst{ Data };
+		RegUtils::Field<uint8_t, 0, 5, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Iterm{ Data };
 
 		constexpr MilliAmperes GetTerminationCurrent() const
 		{
@@ -265,9 +265,9 @@ namespace PiSubmarine::Bq25792
 			Milliseconds2048 = 3
 		};
 
-		RegUtils::Field<uint8_t, 6, 2, RegUtils::Access::ReadWrite, GetSize()> Cell{ Data };
-		RegUtils::Field<BatteryRechargeDeglichTimes, 4, 2, RegUtils::Access::ReadWrite, GetSize()> Trechg{ Data };
-		RegUtils::Field<uint8_t, 0, 4, RegUtils::Access::ReadWrite, GetSize()> Vrechg{ Data };
+		RegUtils::Field<uint8_t, 6, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Cell{ Data };
+		RegUtils::Field<BatteryRechargeDeglichTimes, 4, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Trechg{ Data };
+		RegUtils::Field<uint8_t, 0, 4, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Vrechg{ Data };
 		
 		/// <summary>
 		/// Gets number of cells.
@@ -307,7 +307,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::VotgRegulation, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 11, RegUtils::Access::ReadWrite, GetSize()> Votg{ Data };
+		RegUtils::Field<uint16_t, 0, 11, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Votg{ Data };
 
 		/// <summary>
 		/// Get OTG regulation voltage.
@@ -339,8 +339,8 @@ namespace PiSubmarine::Bq25792
 			Minutes30
 		};
 
-		RegUtils::Field<PrechargeSafetyTimerValues, 7, 1, RegUtils::Access::ReadWrite, GetSize()> PrechgTmr{ Data };
-		RegUtils::Field<uint8_t, 0, 7, RegUtils::Access::ReadWrite, GetSize()> Iotg{ Data };
+		RegUtils::Field<PrechargeSafetyTimerValues, 7, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> PrechgTmr{ Data };
+		RegUtils::Field<uint8_t, 0, 7, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Iotg{ Data };
 
 		constexpr MilliAmperes GetOtgCurrentLimit() const
 		{
@@ -378,12 +378,12 @@ namespace PiSubmarine::Bq25792
 			Hours24
 		};
 
-		RegUtils::Field<TopOffTimerValues, 6, 2, RegUtils::Access::ReadWrite, GetSize()> TopOffTimer{ Data };
-		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize()> EnTrichgTmr{ Data };
-		RegUtils::Field<uint8_t, 4, 1, RegUtils::Access::ReadWrite, GetSize()> EnPrechgTmr{ Data };
-		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize()> EnChgTmr{ Data };
-		RegUtils::Field<FastChargeTimerValues, 1, 2, RegUtils::Access::ReadWrite, GetSize()> ChgTmr{ Data };
-		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize()> Tmr2xEn{ Data };
+		RegUtils::Field<TopOffTimerValues, 6, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> TopOffTimer{ Data };
+		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnTrichgTmr{ Data };
+		RegUtils::Field<uint8_t, 4, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnPrechgTmr{ Data };
+		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnChgTmr{ Data };
+		RegUtils::Field<FastChargeTimerValues, 1, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> ChgTmr{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Tmr2xEn{ Data };
 	};
 
 	struct Reg0FChargerControl0 : RegUtils::Register<RegOffset::ChargerControl0, 1>
@@ -401,7 +401,7 @@ namespace PiSubmarine::Bq25792
 			EnAutoIbatDis = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 7, RegUtils::Access::ReadWrite, GetSize()> Flags0{ Data };
+		RegUtils::Field<Flags, 0, 7, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Flags0{ Data };
 	};
 
 	struct Reg10ChargerControl1 : RegUtils::Register<RegOffset::ChargerControl1, 1>
@@ -427,12 +427,12 @@ namespace PiSubmarine::Bq25792
 			Sec160
 		};
 
-		RegUtils::Field<VacOvpThresholds, 4, 2, RegUtils::Access::ReadWrite, GetSize()> VacOvp{ Data };
+		RegUtils::Field<VacOvpThresholds, 4, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> VacOvp{ Data };
 
 		// Writing 1 resets Watchdog
-		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize()> WdRst{ Data };
+		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> WdRst{ Data };
 
-		RegUtils::Field<WatchdogValues, 0, 3, RegUtils::Access::ReadWrite, GetSize()> Watchdog{ Data };
+		RegUtils::Field<WatchdogValues, 0, 3, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Watchdog{ Data };
 	};
 
 	struct Reg11ChargerControl2 : RegUtils::Register<RegOffset::ChargerControl2, 1>
@@ -447,13 +447,13 @@ namespace PiSubmarine::Bq25792
 			SystemPowerReset
 		};
 		
-		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize()> ForceIndet{ Data };
-		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize()> AutoIndetEn{ Data };
-		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize()> En12V{ Data };
-		RegUtils::Field<uint8_t, 4, 1, RegUtils::Access::ReadWrite, GetSize()> En9V{ Data };
-		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize()> HvDcp{ Data };
-		RegUtils::Field<SdrvControlValues, 1, 2, RegUtils::Access::ReadWrite, GetSize()> SdrvCtrl{ Data };
-		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize()> SdrvDly{ Data };
+		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> ForceIndet{ Data };
+		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> AutoIndetEn{ Data };
+		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> En12V{ Data };
+		RegUtils::Field<uint8_t, 4, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> En9V{ Data };
+		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> HvDcp{ Data };
+		RegUtils::Field<SdrvControlValues, 1, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> SdrvCtrl{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> SdrvDly{ Data };
 	};
 
 
@@ -473,7 +473,7 @@ namespace PiSubmarine::Bq25792
 			DisAcdrv = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::ReadWrite, GetSize()> Flags3{ Data };
+		RegUtils::Field<Flags, 0, 8, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Flags3{ Data };
 	};
 
 	struct Reg13ChargerControl4 : RegUtils::Register<RegOffset::ChargerControl4, 1>
@@ -492,7 +492,7 @@ namespace PiSubmarine::Bq25792
 			EnAcdrv2 = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::ReadWrite, GetSize()> Flags4{ Data };
+		RegUtils::Field<Flags, 0, 8, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Flags4{ Data };
 	};
 
 	struct Reg14ChargerControl5 : RegUtils::Register<RegOffset::ChargerControl5, 1>
@@ -507,12 +507,12 @@ namespace PiSubmarine::Bq25792
 			Disable = 3
 		};
 
-		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize()> SfetPresent{ Data };
-		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize()> EnIbat{ Data };
-		RegUtils::Field<IbatRegValues, 3, 2, RegUtils::Access::ReadWrite, GetSize()> IbatReg{ Data };
-		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize()> EnIinDpm{ Data };
-		RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::ReadWrite, GetSize()> EnExtLim{ Data };
-		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize()> EnBatoc{ Data };
+		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> SfetPresent{ Data };
+		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnIbat{ Data };
+		RegUtils::Field<IbatRegValues, 3, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> IbatReg{ Data };
+		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnIinDpm{ Data };
+		RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnExtLim{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnBatoc{ Data };
 	};
 
 	struct Reg16TemperatureControl : RegUtils::Register<RegOffset::TemperatureControl, 1>
@@ -535,11 +535,11 @@ namespace PiSubmarine::Bq25792
 			Deg85 = 3
 		};
 
-		RegUtils::Field<ThermalRegulationThresholds, 6, 2, RegUtils::Access::ReadWrite, GetSize()> Treg{ Data };
-		RegUtils::Field<ThermalShutdownThresholds, 4, 2, RegUtils::Access::ReadWrite, GetSize()> Tshut{ Data };
-		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize()> VbusPdEn{ Data };
-		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize()> Vac1PdEn{ Data };
-		RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::ReadWrite, GetSize()> Vac2PdEn{ Data };
+		RegUtils::Field<ThermalRegulationThresholds, 6, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Treg{ Data };
+		RegUtils::Field<ThermalShutdownThresholds, 4, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Tshut{ Data };
+		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> VbusPdEn{ Data };
+		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Vac1PdEn{ Data };
+		RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> Vac2PdEn{ Data };
 	};
 
 	struct Reg17NtcControl0 : RegUtils::Register<RegOffset::NtcControl0, 1>
@@ -567,9 +567,9 @@ namespace PiSubmarine::Bq25792
 		};
 
 
-		RegUtils::Field<JeitaVset, 5, 3, RegUtils::Access::ReadWrite, GetSize()> JeitaVset{ Data };
-		RegUtils::Field<JeitaIset, 3, 2, RegUtils::Access::ReadWrite, GetSize()> JeitaSetHot{ Data };
-		RegUtils::Field<JeitaIset, 1, 2, RegUtils::Access::ReadWrite, GetSize()> JeitaSetCold{ Data };
+		RegUtils::Field<JeitaVset, 5, 3, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> JeitaVset{ Data };
+		RegUtils::Field<JeitaIset, 3, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> JeitaSetHot{ Data };
+		RegUtils::Field<JeitaIset, 1, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> JeitaSetCold{ Data };
 	};
 
 	struct Reg18NtcControl1 : RegUtils::Register<RegOffset::NtcControl1, 1>
@@ -606,18 +606,18 @@ namespace PiSubmarine::Bq25792
 			DegMinus20
 		};
 
-		RegUtils::Field<TsCoolValues, 6, 2, RegUtils::Access::ReadWrite, GetSize()> TsCool{ Data };
-		RegUtils::Field<TsWarmValues, 4, 2, RegUtils::Access::ReadWrite, GetSize()> TsWarm{ Data };
-		RegUtils::Field<BHotValues, 2, 2, RegUtils::Access::ReadWrite, GetSize()> BHot{ Data };
-		RegUtils::Field<BColdValues, 1, 1, RegUtils::Access::ReadWrite, GetSize()> BCold{ Data };
-		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize()> TsIgnore{ Data };
+		RegUtils::Field<TsCoolValues, 6, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> TsCool{ Data };
+		RegUtils::Field<TsWarmValues, 4, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> TsWarm{ Data };
+		RegUtils::Field<BHotValues, 2, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> BHot{ Data };
+		RegUtils::Field<BColdValues, 1, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> BCold{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> TsIgnore{ Data };
 	};
 
 	struct Reg19IcoCurrentLimit : RegUtils::Register<RegOffset::IcoCurrentLimit, 2>
 	{
 		using RegUtils::Register<RegOffset::IcoCurrentLimit, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 9, RegUtils::Access::Read, GetSize()> IcoIlim{ Data };
+		RegUtils::Field<uint16_t, 0, 9, RegUtils::Access::Read, GetSize(), std::endian::big> IcoIlim{ Data };
 
 		/// <summary>
 		/// Get Input Current Limit obtained from ICO or ILIM_HIZ pin setting.
@@ -645,7 +645,7 @@ namespace PiSubmarine::Bq25792
 			IinDpmStat = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize()> Flags0{ Data };
+		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize(), std::endian::big> Flags0{ Data };
 	};
 
 	struct Reg1CChargerStatus1 : RegUtils::Register<RegOffset::ChargerStatus1, 1>
@@ -677,9 +677,9 @@ namespace PiSubmarine::Bq25792
 			PoweredFromVbus = 0xB
 		};
 
-		RegUtils::Field<ChgStatValues, 5, 3, RegUtils::Access::Read, GetSize()> ChgStat{ Data };
-		RegUtils::Field<VbusStatValues, 1, 4, RegUtils::Access::Read, GetSize()> VbusStat{ Data };
-		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::Read, GetSize()> Bc12Done{ Data };
+		RegUtils::Field<ChgStatValues, 5, 3, RegUtils::Access::Read, GetSize(), std::endian::big> ChgStat{ Data };
+		RegUtils::Field<VbusStatValues, 1, 4, RegUtils::Access::Read, GetSize(), std::endian::big> VbusStat{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::Read, GetSize(), std::endian::big> Bc12Done{ Data };
 	};
 
 	struct Reg1DChargerStatus2 : RegUtils::Register<RegOffset::ChargerStatus2, 1>
@@ -693,10 +693,10 @@ namespace PiSubmarine::Bq25792
 			MaximumInputCurrent
 		};
 
-		RegUtils::Field<IcoStatValues, 6, 2, RegUtils::Access::Read, GetSize()> IcoStat{ Data };
-		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::Read, GetSize()> TregStat{ Data };
-		RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::Read, GetSize()> DpDmStat{ Data };
-		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::Read, GetSize()> VbatPresentStat{ Data };
+		RegUtils::Field<IcoStatValues, 6, 2, RegUtils::Access::Read, GetSize(), std::endian::big> IcoStat{ Data };
+		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::Read, GetSize(), std::endian::big> TregStat{ Data };
+		RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::Read, GetSize(), std::endian::big> DpDmStat{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::Read, GetSize(), std::endian::big> VbatPresentStat{ Data };
 	};
 
 	struct Reg1EChargerStatus3 : RegUtils::Register<RegOffset::ChargerStatus3, 1>
@@ -714,7 +714,7 @@ namespace PiSubmarine::Bq25792
 			Acrb2Stat = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize()> Flags3{ Data };
+		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize(), std::endian::big> Flags3{ Data };
 	};
 
 	struct Reg1FChargerStatus4 : RegUtils::Register<RegOffset::ChargerStatus4, 1>
@@ -730,7 +730,7 @@ namespace PiSubmarine::Bq25792
 			VbatOtgLow = (1 << 4)
 		};
 
-		RegUtils::Field<Flags, 0, 5, RegUtils::Access::Read, GetSize()> Flags4{ Data };
+		RegUtils::Field<Flags, 0, 5, RegUtils::Access::Read, GetSize(), std::endian::big> Flags4{ Data };
 	};
 
 	struct Reg20FaultStatus0 : RegUtils::Register<RegOffset::FaultStatus0, 1>
@@ -749,7 +749,7 @@ namespace PiSubmarine::Bq25792
 			IbatReg = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize()> Flags0{ Data };
+		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize(), std::endian::big> Flags0{ Data };
 	};
 
 	struct Reg21FaultStatus1 : RegUtils::Register<RegOffset::FaultStatus1, 1>
@@ -765,7 +765,7 @@ namespace PiSubmarine::Bq25792
 			VsysShort = (1 << 7)
 		};
 
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize()> Flags1{ Data };
+		RegUtils::Field<Flags, 0, 8, RegUtils::Access::Read, GetSize(), std::endian::big> Flags1{ Data };
 	};
 
 	// Skipped Charget Flags
@@ -786,7 +786,7 @@ namespace PiSubmarine::Bq25792
 			IbatReg = (1 << 7)
 		};
 
-		RegUtils::Field<Masks, 0, 8, RegUtils::Access::Read, GetSize()> Masks0{ Data };
+		RegUtils::Field<Masks, 0, 8, RegUtils::Access::Read, GetSize(), std::endian::big> Masks0{ Data };
 	};
 
 	struct Reg2DFaultMask1 : RegUtils::Register<RegOffset::FaultMask1, 1>
@@ -802,15 +802,15 @@ namespace PiSubmarine::Bq25792
 			VsysShort = (1 << 7)
 		};
 
-		RegUtils::Field<Masks, 0, 8, RegUtils::Access::Read, GetSize()> Masks1{ Data };
+		RegUtils::Field<Masks, 0, 8, RegUtils::Access::Read, GetSize(), std::endian::big> Masks1{ Data };
 	};
 
 	struct Reg2EAdcControl : RegUtils::Register<RegOffset::AdcControl, 1>
 	{
 		using RegUtils::Register<RegOffset::AdcControl, 1>::Register;
 
-		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize()> AdcEn{ Data };
-		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize()> AdcOneShot{ Data };
+		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> AdcEn{ Data };
+		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> AdcOneShot{ Data };
 
 		/// <summary>
 		/// <para>0 - 15 bit effective resolution</para>
@@ -818,9 +818,9 @@ namespace PiSubmarine::Bq25792
 		/// <para>2 - 13 bit effective resolution</para>
 		/// <para>3 - 12 bit effective resolution</para>
 		/// </summary>
-		RegUtils::Field<uint8_t, 4, 2, RegUtils::Access::ReadWrite, GetSize()> AdcSampleSpeed{ Data };
-		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize()> AdcAvg{ Data };
-		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize()> AdcAvgInit{ Data };
+		RegUtils::Field<uint8_t, 4, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> AdcSampleSpeed{ Data };
+		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> AdcAvg{ Data };
+		RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> AdcAvgInit{ Data };
 	};
 
 	// Skipped ADC disable registers
@@ -829,7 +829,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::IbusAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> IbusAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> IbusAdc{ Data };
 
 		constexpr MilliAmperes GetIbusCurrent() const
 		{
@@ -843,7 +843,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::IbatAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> IbatAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> IbatAdc{ Data };
 
 		constexpr MilliAmperes GetIbatCurrent() const
 		{
@@ -857,7 +857,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::VbusAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> VbusAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> VbusAdc{ Data };
 
 		constexpr MilliVolts GetVbusVoltage() const
 		{
@@ -870,7 +870,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::VbatAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> VbatAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> VbatAdc{ Data };
 
 		constexpr MilliVolts GetVbatVoltage() const
 		{
@@ -883,7 +883,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::VsysAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> VsysAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> VsysAdc{ Data };
 
 		constexpr MilliVolts GetVsysVoltage() const
 		{
@@ -896,7 +896,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::TsAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> TsAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> TsAdc{ Data };
 	};
 
 	struct Reg41TdieAdc : RegUtils::Register<RegOffset::TdieAdc, 2>
@@ -906,14 +906,14 @@ namespace PiSubmarine::Bq25792
 		/// <summary>
 		/// Die Temperature. Range: [-40, 150] Celcius. Bit step size: 0.5C. Reported in 2's complement,
 		/// </summary>
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> TdieAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> TdieAdc{ Data };
 	};
 
 	struct Reg43DpAdc : RegUtils::Register<RegOffset::DpAdc, 2>
 	{
 		using RegUtils::Register<RegOffset::DpAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> DpAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> DpAdc{ Data };
 
 		constexpr MilliVolts GetVbusVoltage() const
 		{
@@ -926,7 +926,7 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::DmAdc, 2>::Register;
 
-		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize()> DmAdc{ Data };
+		RegUtils::Field<uint16_t, 0, 16, RegUtils::Access::Read, GetSize(), std::endian::big> DmAdc{ Data };
 
 		constexpr MilliVolts GetVbusVoltage() const
 		{
