@@ -6,9 +6,9 @@ namespace PiSubmarine::Bq25792
 {
 	struct MilliVolts
 	{
-		uint16_t Value;
+		int32_t Value;
 
-		explicit constexpr MilliVolts(uint16_t v) : Value(v) {}
+		explicit constexpr MilliVolts(int32_t v) : Value(v) {}
 	};
 
 	constexpr bool operator==(MilliVolts lhs, MilliVolts rhs)
@@ -23,12 +23,12 @@ namespace PiSubmarine::Bq25792
 
 	constexpr MilliVolts operator"" _mV(long double v)
 	{
-		return MilliVolts(static_cast<uint16_t>(v));
+		return MilliVolts(static_cast<int32_t>(v));
 	}
 
 	constexpr MilliVolts operator"" _mV(unsigned long long v)
 	{
-		return MilliVolts(static_cast<uint16_t>(v));
+		return MilliVolts(static_cast<int32_t>(v));
 	}
 
 	constexpr MilliVolts operator+(MilliVolts lhs, MilliVolts rhs)
@@ -48,9 +48,9 @@ namespace PiSubmarine::Bq25792
 
 	struct MilliAmperes
 	{
-		uint16_t Value;
+		int32_t Value;
 
-		explicit constexpr MilliAmperes(uint16_t v) : Value(v) {}
+		explicit constexpr MilliAmperes(int32_t v) : Value(v) {}
 	};
 
 	constexpr bool operator==(MilliAmperes lhs, MilliAmperes rhs)
@@ -65,12 +65,12 @@ namespace PiSubmarine::Bq25792
 
 	constexpr MilliAmperes operator"" _mA(long double v)
 	{
-		return MilliAmperes(static_cast<uint16_t>(v));
+		return MilliAmperes(static_cast<int32_t>(v));
 	}
 
 	constexpr MilliAmperes operator"" _mA(unsigned long long v)
 	{
-		return MilliAmperes(static_cast<uint16_t>(v));
+		return MilliAmperes(static_cast<int32_t>(v));
 	}
 
 	constexpr MilliAmperes operator+(MilliAmperes lhs, MilliAmperes rhs)
