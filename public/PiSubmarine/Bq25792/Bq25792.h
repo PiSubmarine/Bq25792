@@ -299,6 +299,7 @@ namespace PiSubmarine::Bq25792
 		void SetRechargeVoltageOffset(MilliVolts valueMv)
 		{
 			uint8_t value = (valueMv.Value - 50) / 50;
+			Vrechg.Set(value);
 		}
 	};
 
