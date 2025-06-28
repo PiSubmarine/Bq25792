@@ -439,16 +439,6 @@ namespace PiSubmarine::Bq25792
 	{
 		using RegUtils::Register<RegOffset::ChargerControl2, 1>::Register;
 
-		enum class Flags : uint8_t
-		{
-			SdrvDly = (1 << 0),
-			HvDcp = (1 << 3),
-			En9V = (1 << 4),
-			En12V = (1 >> 5),
-			AutoIndetEn = (1 << 6),
-			ForceIndet = (1 << 7)
-		};
-
 		enum class SdrvControlValues
 		{
 			Idle = 0,
@@ -456,9 +446,14 @@ namespace PiSubmarine::Bq25792
 			ShipMode,
 			SystemPowerReset
 		};
-
-		RegUtils::Field<Flags, 0, 8, RegUtils::Access::ReadWrite, GetSize()> Flags2{ Data };
-		RegUtils::Field<SdrvControlValues, 1, 3, RegUtils::Access::ReadWrite, GetSize()> SdrvCtrl{ Data };
+		
+		RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize()> ForceIndet{ Data };
+		RegUtils::Field<uint8_t, 6, 1, RegUtils::Access::ReadWrite, GetSize()> AutoIndetEn{ Data };
+		RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize()> En12V{ Data };
+		RegUtils::Field<uint8_t, 4, 1, RegUtils::Access::ReadWrite, GetSize()> En9V{ Data };
+		RegUtils::Field<uint8_t, 3, 1, RegUtils::Access::ReadWrite, GetSize()> HvDcp{ Data };
+		RegUtils::Field<SdrvControlValues, 1, 2, RegUtils::Access::ReadWrite, GetSize()> SdrvCtrl{ Data };
+		RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize()> SdrvDly{ Data };
 	};
 
 
