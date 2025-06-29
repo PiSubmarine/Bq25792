@@ -131,9 +131,9 @@ namespace PiSubmarine::Bq25792
 		/// Returns true if there is a pending read/write I2C transation.
 		/// </summary>
 		/// <returns>True if transaction not finished.</returns>
-		bool IsDirty()
+		bool IsTransactionInProgress()
 		{
-			return m_IsDirty;
+			return m_IsTransactionInProgress;
 		}
 
 		/// <summary>
@@ -251,12 +251,12 @@ namespace PiSubmarine::Bq25792
 
 		I2CDriver& m_Driver;
 		std::array<uint8_t, MemorySize> m_ChargerMemoryBuffer{0};
-		bool m_IsDirty = false;
+		bool m_IsTransactionInProgress = false;
 		bool m_HasError = false;
 
 		bool Read(uint8_t offset, uint8_t* data, size_t size)
 		{
-			if (m_IsDirty)
+			if (m_IsTransactionInProgress)
 			{
 				return false;
 			}
@@ -270,7 +270,7 @@ namespace PiSubmarine::Bq25792
 			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this](uint8_t cbAddress, bool cbOk) {I2CCallback(cbAddress, cbOk); });
 			if (transactionStarted)
 			{
-				m_IsDirty = true;
+				m_IsTransactionInProgress = true;
 			}
 
 			return transactionStarted;
@@ -278,7 +278,7 @@ namespace PiSubmarine::Bq25792
 
 		bool Write(uint8_t offset, uint8_t* data, size_t size)
 		{
-			if (m_IsDirty)
+			if (m_IsTransactionInProgress)
 			{
 				return false;
 			}
@@ -293,7 +293,7 @@ namespace PiSubmarine::Bq25792
 			bool transactionStarted = m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this](uint8_t cbAddress, bool cbOk) {I2CCallback(cbAddress, cbOk); });
 			if (transactionStarted)
 			{
-				m_IsDirty = true;
+				m_IsTransactionInProgress = true;
 			}
 
 			return transactionStarted;
@@ -302,7 +302,7 @@ namespace PiSubmarine::Bq25792
 		void I2CCallback(uint8_t deviceAddress, bool ok)
 		{
 			m_HasError = !ok;
-			m_IsDirty = false;
+			m_IsTransactionInProgress = false;
 		}
 	};
 

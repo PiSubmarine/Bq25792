@@ -17,7 +17,7 @@ namespace PiSubmarine::Bq25792
 
 		bool readStarted = device.Read();
 		ASSERT_TRUE(readStarted);
-		while (device.IsDirty())
+		while (device.IsTransactionInProgress())
 		{
 			std::this_thread::sleep_for(100ms);
 		}
@@ -29,11 +29,12 @@ namespace PiSubmarine::Bq25792
 		device.SetMinimalSystemVoltage(vsysmin);
 		bool writeStarted = device.Write(RegOffset::MinimalSystemVoltage);
 		ASSERT_TRUE(writeStarted);
-		while (device.IsDirty())
+		while (device.IsTransactionInProgress())
 		{
 			std::this_thread::sleep_for(100ms);
 		}
 
 		ASSERT_EQ(mockData, mockDataWriteExpected);
 	}
+
 }
