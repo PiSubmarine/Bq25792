@@ -224,6 +224,16 @@ namespace PiSubmarine::Bq25792
 			uint16_t value = valueMa.Value / 10;
 			RegUtils::Write<uint16_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
 		}
+
+		void SetTsIgnore(bool value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
+		}
+
+		bool GetTsIgnore()
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
+		}
 		
 
 	private:
