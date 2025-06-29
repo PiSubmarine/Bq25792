@@ -5,7 +5,7 @@ include(FetchContent)
 project(PiSubmarine.Bq25792.Test LANGUAGES CXX)
 
 set(PiSubmarine.Bq25792.Test.Sources 
-	"PiSubmarine/Bq25792Test.cpp")
+	"PiSubmarine/Bq25792/Bq25792Test.cpp")
 
 enable_testing()
 

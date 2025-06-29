@@ -2,6 +2,7 @@
 
 #include "PiSubmarine/RegUtils.h"
 #include "PiSubmarine/Bq25792/Units.h"
+#include <functional>
 
 namespace PiSubmarine::Bq25792
 {
@@ -64,6 +65,184 @@ namespace PiSubmarine::Bq25792
 		DpDmDriver = 0x47,
 		PartInformation = 0x48
 	};
+
+	/// <summary>
+	/// Bit position at register offset determines register size. 0 - 1 byte, 1 - 2 bytes. For registers below 0x40.
+	/// </summary>
+	constexpr uint64_t RegSizesA =
+		(1ULL << static_cast<uint8_t>(RegOffset::ChargeVoltageLimit)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::ChargeCurrentLimit)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::InputCurrentLimit)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::VotgRegulation)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::IcoCurrentLimit)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::IbusAdc)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::IbatAdc)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::VbusAdc)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::Vac1Adc)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::Vac2Adc)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::VsysAdc)) |
+		(1ULL << static_cast<uint8_t>(RegOffset::TsAdc));
+
+
+	/// <summary>
+	/// Bit position at register offset determines register size. 0 - 1 byte, 1 - 2 bytes. For registers above 0x40. Shifted by 64 positions.
+	/// </summary>
+	constexpr uint8_t RegSizesB =
+		(1ULL << (static_cast<uint8_t>(RegOffset::TdieAdc) - 64)) |
+		(1ULL << (static_cast<uint8_t>(RegOffset::DpAdc) - 64)) |
+		(1ULL << (static_cast<uint8_t>(RegOffset::DmAdc) - 64));
+
+	constexpr uint8_t GetRegisterSize(RegOffset reg)
+	{
+		uint8_t bitPos = static_cast<uint8_t>(reg);
+		if (bitPos < 64)
+		{
+			return RegSizesA & (1 << bitPos);
+		}
+		else
+		{
+			return RegSizesB & (1 << (bitPos - 64));
+		}
+	}
+
+	using I2CCallback = std::function<void(bool)>;
+
+	template<typename T>
+	concept I2CDriverConcept = requires(T driver, uint8_t deviceAddress, const uint8_t* txData, uint8_t* rxData, size_t len, I2CCallback callback)
+	{
+		{ driver.Write(deviceAddress, txData, len) } -> std::same_as<bool>;
+		{ driver.Read(deviceAddress, rxData, len) } -> std::same_as<bool>;
+		{ driver.WriteAsync(deviceAddress, txData, len, callback) } -> std::same_as<bool>;
+		{ driver.ReadAsync(deviceAddress, rxData, len, callback) } -> std::same_as<bool>;
+	};
+
+	template<I2CDriverConcept I2CDriver>
+	class Bq25792
+	{
+	public:
+		constexpr static uint8_t Address = 0x6B;
+
+		Bq25792(I2CDriver& driver) : m_Driver(driver)
+		{
+
+		}
+
+		/// <summary>
+		/// Returns true if there is a pending read/write I2C transation.
+		/// </summary>
+		/// <returns>True if transaction not finished.</returns>
+		bool IsDirty()
+		{
+			return m_IsDirty;
+		}
+
+		/// <summary>
+		/// Returns true if previous transaction failed. Cleared to false upon new Read or Write.
+		/// </summary>
+		/// <returns>True if has error.</returns>
+		bool HasError()
+		{
+			return m_HasError;
+		}
+
+		/// <summary>
+		/// Reads all registers.
+		/// </summary>
+		/// <returns>True if transaction was successfully started.</returns>
+		bool Read()
+		{
+			return Read(m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+		}
+
+		/// <summary>
+		/// Reads specific register.
+		/// </summary>
+		/// <param name="reg">Register offset</param>
+		/// <returns>True if transaction was successfully started.</returns>
+		bool Read(RegOffset reg)
+		{
+			size_t regSize = GetRegisterSize(reg);
+			return Read(m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
+		}
+
+		/// <summary>
+		/// Writes all registers.
+		/// </summary>
+		/// <returns>True if transaction was successfully started.</returns>
+		bool Write()
+		{
+			return Read(m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+		}
+
+		/// <summary>
+		/// Writes specific register.
+		/// </summary>
+		/// <param name="reg">Register offset</param>
+		/// <returns>True if transaction was successfully started.</returns>
+		bool Write(RegOffset reg)
+		{
+			size_t regSize = GetRegisterSize(reg);
+			return Read(m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
+		}
+
+		/// <summary>
+		/// Gets Minimal System Voltage (VSYSMIN) from Memory Buffer.
+		/// </summary>
+		/// <returns>VSYSMIN in mV.</returns>
+		MilliVolts GetMinimalSystemVoltage() const
+		{
+			uint16_t vsysMin = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 9);
+			return 2500_mV + MilliVolts(vsysMin) * 250_mV;
+		}
+
+	private:
+		I2CDriver& m_Driver;
+		std::array<uint8_t, 0x49> m_ChargerMemoryBuffer{0};
+		bool m_IsDirty = false;
+		bool m_HasError = false;
+
+		bool Read(uint8_t* data, size_t size)
+		{
+			if (m_IsDirty)
+			{
+				return false;
+			}
+
+			m_HasError = false;
+			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this](bool ok) {I2CCallback(ok); });
+			if (transactionStarted)
+			{
+				m_IsDirty = true;
+			}
+
+			return transactionStarted;
+		}
+
+		bool Write(uint8_t* data, size_t size)
+		{
+			if (m_IsDirty)
+			{
+				return false;
+			}
+
+			m_HasError = false;
+			bool transactionStarted = m_Driver.WriteAsync(Address, data, size, [this](bool ok) {I2CCallback(ok); });
+			if (transactionStarted)
+			{
+				m_IsDirty = true;
+			}
+
+			return transactionStarted;
+		}
+
+		void I2CCallback(bool ok)
+		{
+			m_HasError = ok;
+			m_IsDirty = false;
+		}
+	};
+
+	/*
 
 	struct Reg00MinimalSystemVoltage : RegUtils::Register<RegOffset::MinimalSystemVoltage, 1>
 	{
@@ -934,4 +1113,6 @@ namespace PiSubmarine::Bq25792
 			return MilliVolts(value);
 		}
 	};
+
+	*/
 }
