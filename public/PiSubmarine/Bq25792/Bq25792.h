@@ -97,18 +97,18 @@ namespace PiSubmarine::Bq25792
 		uint8_t bitPos = static_cast<uint8_t>(reg);
 		if (bitPos < 64)
 		{
-			return RegSizesA & (1 << bitPos);
+			return RegSizesA & (1ULL << bitPos) ? 2 : 1;
 		}
 		else
 		{
-			return RegSizesB & (1 << (bitPos - 64));
+			return RegSizesB & (1ULL << (bitPos - 64)) ? 2 : 1;
 		}
 	}
 
-	using I2CCallback = std::function<void(bool)>;
+	using I2CCallback = std::function<void(uint8_t deviceAddress, bool)>;
 
 	template<typename T>
-	concept I2CDriverConcept = requires(T driver, uint8_t deviceAddress, const uint8_t* txData, uint8_t* rxData, size_t len, I2CCallback callback)
+	concept I2CDriverConcept = requires(T driver, uint8_t deviceAddress, uint8_t* txData, uint8_t* rxData, size_t len, I2CCallback callback)
 	{
 		{ driver.Write(deviceAddress, txData, len) } -> std::same_as<bool>;
 		{ driver.Read(deviceAddress, rxData, len) } -> std::same_as<bool>;
@@ -151,7 +151,7 @@ namespace PiSubmarine::Bq25792
 		/// <returns>True if transaction was successfully started.</returns>
 		bool Read()
 		{
-			return Read(m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+			return Read(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
 		}
 
 		/// <summary>
@@ -162,7 +162,7 @@ namespace PiSubmarine::Bq25792
 		bool Read(RegOffset reg)
 		{
 			size_t regSize = GetRegisterSize(reg);
-			return Read(m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
+			return Read(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
 		}
 
 		/// <summary>
@@ -171,7 +171,7 @@ namespace PiSubmarine::Bq25792
 		/// <returns>True if transaction was successfully started.</returns>
 		bool Write()
 		{
-			return Read(m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+			return Write(m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
 		}
 
 		/// <summary>
@@ -182,7 +182,7 @@ namespace PiSubmarine::Bq25792
 		bool Write(RegOffset reg)
 		{
 			size_t regSize = GetRegisterSize(reg);
-			return Read(m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
+			return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
 		}
 
 		/// <summary>
@@ -191,25 +191,42 @@ namespace PiSubmarine::Bq25792
 		/// <returns>VSYSMIN in mV.</returns>
 		MilliVolts GetMinimalSystemVoltage() const
 		{
-			uint16_t vsysMin = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 9);
+			uint8_t vsysMin = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
 			return 2500_mV + MilliVolts(vsysMin) * 250_mV;
 		}
 
+		/// <summary>
+		/// Sets minimal system voltage. Range: 2500mV - 16000mV, bit step size: 250mV
+		/// </summary>
+		/// <param name="valueMv">Voltage in mV</param>
+		void SetMinimalSystemVoltage(MilliVolts valueMv)
+		{
+			uint8_t value = (valueMv.Value - 2500) / 250;
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
+		}
+
 	private:
+		constexpr static size_t MemorySize = 0x49;
+
 		I2CDriver& m_Driver;
-		std::array<uint8_t, 0x49> m_ChargerMemoryBuffer{0};
+		std::array<uint8_t, MemorySize> m_ChargerMemoryBuffer{0};
 		bool m_IsDirty = false;
 		bool m_HasError = false;
 
-		bool Read(uint8_t* data, size_t size)
+		bool Read(uint8_t offset, uint8_t* data, size_t size)
 		{
 			if (m_IsDirty)
 			{
 				return false;
 			}
 
-			m_HasError = false;
-			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this](bool ok) {I2CCallback(ok); });
+			m_HasError = !m_Driver.Write(Address, &offset, 1);
+			if (m_HasError)
+			{
+				return false;
+			}
+
+			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this](uint8_t cbAddress, bool cbOk) {I2CCallback(cbAddress, cbOk); });
 			if (transactionStarted)
 			{
 				m_IsDirty = true;
@@ -218,7 +235,7 @@ namespace PiSubmarine::Bq25792
 			return transactionStarted;
 		}
 
-		bool Write(uint8_t* data, size_t size)
+		bool Write(uint8_t offset, uint8_t* data, size_t size)
 		{
 			if (m_IsDirty)
 			{
@@ -226,7 +243,13 @@ namespace PiSubmarine::Bq25792
 			}
 
 			m_HasError = false;
-			bool transactionStarted = m_Driver.WriteAsync(Address, data, size, [this](bool ok) {I2CCallback(ok); });
+
+			std::vector<uint8_t> buffer;
+			buffer.resize(size + 1);
+			buffer[0] = offset;
+			memcpy(buffer.data() + 1, data, size);
+
+			bool transactionStarted = m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this](uint8_t cbAddress, bool cbOk) {I2CCallback(cbAddress, cbOk); });
 			if (transactionStarted)
 			{
 				m_IsDirty = true;
@@ -235,7 +258,7 @@ namespace PiSubmarine::Bq25792
 			return transactionStarted;
 		}
 
-		void I2CCallback(bool ok)
+		void I2CCallback(uint8_t deviceAddress, bool ok)
 		{
 			m_HasError = ok;
 			m_IsDirty = false;
