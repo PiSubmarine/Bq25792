@@ -281,7 +281,7 @@ namespace PiSubmarine::Bq25792
 
 		void I2CCallback(uint8_t deviceAddress, bool ok)
 		{
-			m_HasError = ok;
+			m_HasError = !ok;
 			m_IsDirty = false;
 		}
 	};
