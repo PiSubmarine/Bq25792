@@ -211,7 +211,7 @@ namespace PiSubmarine::Bq25792
 		/// <returns>Current in mA</returns>
 		constexpr MilliAmperes GetChargeCurrentLimit() const
 		{
-			uint16_t Ichg = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
+			uint16_t Ichg = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
 			return MilliAmperes(Ichg) * 10_mA;
 		}
 
