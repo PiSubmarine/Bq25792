@@ -234,6 +234,16 @@ namespace PiSubmarine::Bq25792
 		{
 			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
 		}
+
+		void SetWdRst(bool value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
+		}
+
+		bool GetWdRst()
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
+		}
 		
 
 	private:
