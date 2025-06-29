@@ -171,7 +171,7 @@ namespace PiSubmarine::Bq25792
 		/// <returns>True if transaction was successfully started.</returns>
 		bool Write()
 		{
-			return Write(m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+			return Write(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
 		}
 
 		/// <summary>
