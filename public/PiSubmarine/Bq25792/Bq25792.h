@@ -205,6 +205,27 @@ namespace PiSubmarine::Bq25792
 			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
 		}
 
+		/// <summary>
+		/// Gets maxium charge current.
+		/// </summary>
+		/// <returns>Current in mA</returns>
+		constexpr MilliAmperes GetChargeCurrentLimit() const
+		{
+			uint16_t Ichg = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
+			return MilliAmperes(Ichg) * 10_mA;
+		}
+
+		/// <summary>
+		/// Sets maximum charge current. Range: 50mA - 5000mA, bit step size: 10mA.
+		/// </summary>
+		/// <param name="valueMa">Current in mA</param>
+		void SetChargeCurrentLimit(MilliAmperes valueMa)
+		{
+			uint16_t value = valueMa.Value / 10;
+			RegUtils::Write<uint16_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
+		}
+		
+
 	private:
 		constexpr static size_t MemorySize = 0x49;
 
