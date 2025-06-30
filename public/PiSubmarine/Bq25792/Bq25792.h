@@ -271,6 +271,41 @@ namespace PiSubmarine::Bq25792
 			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
 		}
 		
+		/// <summary>
+		/// <para>0 - 15 bit effective resolution</para>
+		/// <para>1 - 14 bit effective resolution</para>
+		/// <para>2 - 13 bit effective resolution</para>
+		/// <para>3 - 12 bit effective resolution</para>
+		/// </summary>
+		/// <returns></returns>
+		uint8_t GetAdcSampleSpeed() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 4, 2);
+		}
+
+		/// <summary>
+		/// <para>0 - 15 bit effective resolution</para>
+		/// <para>1 - 14 bit effective resolution</para>
+		/// <para>2 - 13 bit effective resolution</para>
+		/// <para>3 - 12 bit effective resolution</para>
+		/// </summary>
+		/// <param name="value">Sample speed in range [0, 3]</param>
+		void SetAdcSampleSpeed(uint8_t value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 4, 2);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
+		}
+
+		bool IsAdcEnabled() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
+		}
+
+		void SetAdcEnabled(bool value) const
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::AdcControl)] = true;
+		}
 
 	private:
 		constexpr static size_t MemorySize = 0x49;
