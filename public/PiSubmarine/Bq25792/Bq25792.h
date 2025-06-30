@@ -119,6 +119,31 @@ namespace PiSubmarine::Bq25792
 		IinDpmStat = (1 << 7)
 	};
 
+	enum class ChargeStatus : uint8_t
+	{
+		NotCharging = 0,
+		TrickleCharge = 1,
+		PreCharge = 2,
+		FastCharge = 3,
+		TaperCharge = 4,
+		TopOffTimerActiveCharging = 6,
+		ChargindTerminationDone = 7
+	};
+
+	enum class VbusStatus : uint8_t
+	{
+		NoInputOrBhotOrBcold = 0,
+		UsbSdp = 1,
+		UsbCdp = 2,
+		UsbDcp = 3,
+		HvDcp = 4,
+		UnknownAdapter = 5,
+		NonStandardAdapter = 6,
+		Otg = 7,
+		NotQualifiedAdaptor = 8,
+		PoweredFromVbus = 0xB
+	};
+
 	template<PiSubmarine::Api::Internal::I2C::DriverConcept I2CDriver>
 	class Device
 	{
@@ -321,6 +346,21 @@ namespace PiSubmarine::Bq25792
 		ChargerStatus0Flags GetChargerStatus0() const
 		{
 			return RegUtils::Read<ChargerStatus0Flags, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus0), 0, 8);
+		}
+
+		ChargeStatus GetChargeStatus() const
+		{
+			return RegUtils::Read<ChargeStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 5, 3);
+		}
+
+		VbusStatus GetVbusStatus() const
+		{
+			return RegUtils::Read<VbusStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 1, 4);
+		}
+
+		bool IsBc12DetectionComplete() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 0, 1);
 		}
 
 		MilliAmperes GetIbusCurrent() const
