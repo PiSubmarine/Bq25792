@@ -144,6 +144,13 @@ namespace PiSubmarine::Bq25792
 		PoweredFromVbus = 0xB
 	};
 
+	enum class IcoStatus : uint8_t
+	{
+		IcoDisabled,
+		IcoOptimizationInProgress,
+		MaximumInputCurrent
+	};
+
 	template<PiSubmarine::Api::Internal::I2C::DriverConcept I2CDriver>
 	class Device
 	{
@@ -361,6 +368,26 @@ namespace PiSubmarine::Bq25792
 		bool IsBc12DetectionComplete() const
 		{
 			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 0, 1);
+		}
+
+		IcoStatus GetIcoStatus() const
+		{
+			return RegUtils::Read<IcoStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 6, 2);
+		}
+
+		bool IsInTemperatureRegulation() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 2, 1);
+		}
+
+		bool IsDpDmDetectionOngoing() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 1, 1);
+		}
+
+		bool IsBatteryPresent() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 0, 1);
 		}
 
 		MilliAmperes GetIbusCurrent() const
