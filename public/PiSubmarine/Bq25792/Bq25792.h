@@ -151,6 +151,14 @@ namespace PiSubmarine::Bq25792
 		MaximumInputCurrent
 	};
 
+	enum class IbatReg
+	{
+		Amps3 = 0,
+		Amps4 = 1,
+		Amps5 = 2,
+		Disable = 3
+	};
+
 	template<PiSubmarine::Api::Internal::I2C::DriverConcept I2CDriver>
 	class Device
 	{
@@ -290,6 +298,83 @@ namespace PiSubmarine::Bq25792
 			uint16_t value = valueMa.Value / 10;
 			RegUtils::Write<uint16_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
 			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargeCurrentLimit)] = true;
+		}
+
+		/*
+		* struct Reg14ChargerControl5 : RegUtils::Register<RegOffset::ChargerControl5, 1>
+		{
+			using RegUtils::Register<RegOffset::ChargerControl5, 1>::Register;
+
+			enum class IbatRegValues
+			{
+				Amps3 = 0,
+				Amps4 = 1,
+				Amps5 = 2,
+				Disable = 3
+			};
+
+			RegUtils::Field<uint8_t, 7, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> SfetPresent{ Data };
+			RegUtils::Field<uint8_t, 5, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnIbat{ Data };
+			RegUtils::Field<IbatRegValues, 3, 2, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> IbatReg{ Data };
+			RegUtils::Field<uint8_t, 2, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnIinDpm{ Data };
+			RegUtils::Field<uint8_t, 1, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnExtLim{ Data };
+			RegUtils::Field<uint8_t, 0, 1, RegUtils::Access::ReadWrite, GetSize(), std::endian::big> EnBatoc{ Data };
+		};
+		*/
+
+		IbatReg GetOtgMaxCurrent() const
+		{
+			return RegUtils::Read<IbatReg, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 3, 2);
+		}
+
+		void SetOtgMaxCurrent(IbatReg value)
+		{
+			RegUtils::Write<IbatReg, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+		}
+
+		bool IsSfetPresent() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 7, 1);
+		}
+
+		void SetSfetPresent(bool value)
+		{
+			RegUtils::Write<IbatReg, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 7, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+		}
+
+		bool IsDischargeCurrentSensingEnabled() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 5, 1);
+		}
+
+		void SetDischargeCurrentSensingEnabled(bool value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 5, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+		}
+
+		bool IsIlimHizCurrentLimitEnabled() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 1, 1);
+		}
+
+		void SetIlimHizCurrentLimitEnabled(bool value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 1, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+		}
+
+		bool IsDischargeOcpEnabled() const
+		{
+			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
+		}
+
+		void SetDischargeOcpEnabled(bool value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
 		}
 
 		void SetTsIgnore(bool value)
