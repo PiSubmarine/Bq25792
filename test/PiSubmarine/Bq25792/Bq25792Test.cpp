@@ -56,11 +56,13 @@ namespace PiSubmarine::Bq25792
 		ASSERT_EQ(vsysmin, 12000_mV);
 		bool wdRst = device.GetWdRst();
 		ASSERT_FALSE(wdRst);
+		ASSERT_FALSE(device.HasDirtyRegisters());
 
 		vsysmin = 14250_mV; 
 		device.SetMinimalSystemVoltage(14250_mV);// Will be 0b00101111 or 0x2F
 		device.SetChargeCurrentLimit(3000_mA);
 		device.SetWdRst(true);
+		ASSERT_TRUE(device.HasDirtyRegisters());
 		bool writeStarted = device.WriteDirty();
 
 		ASSERT_TRUE(writeStarted);

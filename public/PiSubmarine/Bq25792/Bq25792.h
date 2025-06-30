@@ -196,6 +196,10 @@ namespace PiSubmarine::Bq25792
 			return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
 		}
 
+		/// <summary>
+		/// Writes all dirty registers in a sequence of transactions.
+		/// </summary>
+		/// <returns>True if transaction was successfully started. False if there was an error or no register was dirty.</returns>
 		bool WriteDirty()
 		{
 			if (m_IsTransactionInProgress)
@@ -207,6 +211,11 @@ namespace PiSubmarine::Bq25792
 			m_IsTransactionInProgress = true;
 
 			return WriteDirtyInternal(RegOffset{0});
+		}
+
+		bool HasDirtyRegisters()
+		{
+			return m_DirtyRegs.any();
 		}
 
 		/// <summary>
@@ -309,6 +318,63 @@ namespace PiSubmarine::Bq25792
 			m_DirtyRegs[RegUtils::ToInt(RegOffset::AdcControl)] = true;
 		}
 
+		MilliAmperes GetIbusCurrent() const
+		{
+			auto isubAdc = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbusAdc), 0, 16);
+			int16_t sValue = RegUtils::ConvertTwosComplement(isubAdc);
+			return MilliAmperes(sValue);
+		}
+
+		MilliAmperes GetIbatCurrent() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbatAdc), 0, 16);
+			int16_t sValue = RegUtils::ConvertTwosComplement(value);
+			return MilliAmperes(sValue);
+		}
+
+		MilliVolts GetVbusVoltage() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VbusAdc), 0, 16);
+			return MilliVolts(value);
+		}
+
+		MilliVolts GetVbatVoltage() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VbatAdc), 0, 16);
+			return MilliVolts(value);
+		}
+
+		MilliVolts GetVsysVoltage() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VsysAdc), 0, 16);
+			return MilliVolts(value);
+		}
+
+		uint16_t GetTsPercentage() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TsAdc), 0, 16);
+			return value;
+		}
+
+		Celcius GetDieTemperature() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TdieAdc), 0, 16);
+			int16_t sValue = RegUtils::ConvertTwosComplement(value);
+			return Celcius(sValue);
+		}
+
+		MilliVolts GetUsbDataPlusVoltage() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::DpAdc), 0, 16);
+			return MilliVolts(value);
+		}
+
+		MilliVolts GetUsbDataMinusVoltage() const
+		{
+			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::DmAdc), 0, 16);
+			return MilliVolts(value);
+		}
+
 	private:
 		constexpr static size_t MemorySize = 0x49;
 
@@ -402,6 +468,7 @@ namespace PiSubmarine::Bq25792
 				memcpy(buffer.data() + 1, m_ChargerMemoryBuffer.data() + i, regSize);
 				return m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, reg](uint8_t cbAddress, bool cbOk) {WriteDirtyCallback(cbAddress, reg, cbOk); });
 			}
+			return false;
 		}
 
 		void WriteDirtyCallback(uint8_t deviceAddress, RegOffset reg, bool ok)
