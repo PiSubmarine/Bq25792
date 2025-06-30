@@ -2,12 +2,13 @@
 
 #include "PiSubmarine/RegUtils.h"
 #include "PiSubmarine/Bq25792/Units.h"
+#include "PiSubmarine/Api/Internal/I2C/DriverConcept.h"
 #include <functional>
 #include <bitset>
 
 namespace PiSubmarine::Bq25792
 {
-	enum class RegOffset: uint8_t
+	enum class RegOffset : uint8_t
 	{
 		MinimalSystemVoltage = 0x00,
 		ChargeVoltageLimit = 0x01,
@@ -106,24 +107,25 @@ namespace PiSubmarine::Bq25792
 		}
 	}
 
-	using I2CCallback = std::function<void(uint8_t deviceAddress, bool)>;
-
-	template<typename T>
-	concept I2CDriverConcept = requires(T driver, uint8_t deviceAddress, uint8_t* txData, uint8_t* rxData, size_t len, I2CCallback callback)
+	enum class ChargerStatus0Flags : uint8_t
 	{
-		{ driver.Write(deviceAddress, txData, len) } -> std::same_as<bool>;
-		{ driver.Read(deviceAddress, rxData, len) } -> std::same_as<bool>;
-		{ driver.WriteAsync(deviceAddress, txData, len, callback) } -> std::same_as<bool>;
-		{ driver.ReadAsync(deviceAddress, rxData, len, callback) } -> std::same_as<bool>;
+		VbusPresentStat = (1 << 0),
+		Ac1PresentStat = (1 << 1),
+		Ac2PresentStat = (1 << 2),
+		PgStat = (1 << 3),
+		PoorSrcStat = (1 << 4),
+		WdStat = (1 << 5),
+		VinDpm = (1 << 6),
+		IinDpmStat = (1 << 7)
 	};
 
-	template<I2CDriverConcept I2CDriver>
-	class Bq25792
+	template<PiSubmarine::Api::Internal::I2C::DriverConcept I2CDriver>
+	class Device
 	{
 	public:
 		constexpr static uint8_t Address = 0x6B;
 
-		Bq25792(I2CDriver& driver) : m_Driver(driver)
+		Device(I2CDriver& driver) : m_Driver(driver)
 		{
 
 		}

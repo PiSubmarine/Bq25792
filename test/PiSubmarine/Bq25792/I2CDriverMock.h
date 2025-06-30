@@ -7,6 +7,8 @@
 #include <stop_token>
 #include <vector>
 #include <condition_variable>
+#include "PiSubmarine/Api/Internal/I2C/Callback.h"
+#include "PiSubmarine/Api/Internal/I2C/DriverConcept.h"
 
 namespace PiSubmarine::Bq25792
 {
@@ -17,7 +19,7 @@ namespace PiSubmarine::Bq25792
 		uint8_t* RxData;
 		size_t RxLen;
 		std::vector<uint8_t> TxData;
-		I2CCallback Callback;
+		Api::Internal::I2C::Callback Callback;
 		bool IsWrite = false;
 		std::string Tag;
 	};
@@ -55,7 +57,7 @@ namespace PiSubmarine::Bq25792
 			return !m_SimalateError;
 		}
 
-		bool ReadAsync(uint8_t deviceAddress, uint8_t* rxData, size_t len, I2CCallback callback)
+		bool ReadAsync(uint8_t deviceAddress, uint8_t* rxData, size_t len, Api::Internal::I2C::Callback callback)
 		{
 			std::lock_guard lock(m_Mutex);
 			if (m_HasRequest)
@@ -74,7 +76,7 @@ namespace PiSubmarine::Bq25792
 			return true;
 		}
 
-		bool WriteAsync(uint8_t deviceAddress, uint8_t* txData, size_t len, I2CCallback callback)
+		bool WriteAsync(uint8_t deviceAddress, uint8_t* txData, size_t len, Api::Internal::I2C::Callback callback)
 		{
 			std::lock_guard lock(m_Mutex);
 			if (m_HasRequest)

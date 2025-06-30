@@ -5,3 +5,6 @@ target_include_directories(PiSubmarine.Bq25792 INTERFACE "${CMAKE_CURRENT_SOURCE
 
 PiSubmarineAddDependency("https://github.com/PiSubmarine/RegUtils" "")
 target_link_libraries(PiSubmarine.Bq25792 INTERFACE PiSubmarine.RegUtils)
+
+PiSubmarineAddDependency("https://github.com/PiSubmarine/Api.Internal.I2C" "")
+target_link_libraries(PiSubmarine.Bq25792 INTERFACE PiSubmarine.Api.Internal.I2C)
