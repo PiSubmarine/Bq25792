@@ -100,13 +100,13 @@ namespace PiSubmarine::Bq25792
 		}
 	};
 
-	constexpr Celcius operator"" _C(long double v)
+	constexpr Celcius operator"" _c(long double v)
 	{
 		// Multiply by 2 to store in 0.5C units, round to nearest int
 		return Celcius(static_cast<int32_t>(v * 2.0 + 0.5));
 	}
 
-	constexpr Celcius operator"" _C(unsigned long long v)
+	constexpr Celcius operator"" _c(unsigned long long v)
 	{
 		return Celcius(static_cast<int32_t>(v * 2));
 	}
