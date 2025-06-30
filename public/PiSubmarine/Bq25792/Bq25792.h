@@ -375,7 +375,7 @@ namespace PiSubmarine::Bq25792
 			return RegUtils::Read<IcoStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 6, 2);
 		}
 
-		bool IsInTemperatureRegulation() const
+		bool IsInThermalRegulation() const
 		{
 			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 2, 1);
 		}
