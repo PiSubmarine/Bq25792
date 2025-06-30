@@ -303,7 +303,7 @@ namespace PiSubmarine::Bq25792
 			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
 		}
 
-		void SetAdcEnabled(bool value) const
+		void SetAdcEnabled(bool value)
 		{
 			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
 			m_DirtyRegs[RegUtils::ToInt(RegOffset::AdcControl)] = true;
