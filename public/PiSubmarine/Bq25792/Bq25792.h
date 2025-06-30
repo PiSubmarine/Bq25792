@@ -318,6 +318,11 @@ namespace PiSubmarine::Bq25792
 			m_DirtyRegs[RegUtils::ToInt(RegOffset::AdcControl)] = true;
 		}
 
+		ChargerStatus0Flags GetChargerStatus0() const
+		{
+			return RegUtils::Read<ChargerStatus0Flags, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus0), 0, 8);
+		}
+
 		MilliAmperes GetIbusCurrent() const
 		{
 			auto isubAdc = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbusAdc), 0, 16);
