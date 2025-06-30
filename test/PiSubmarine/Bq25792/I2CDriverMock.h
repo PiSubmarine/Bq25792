@@ -71,7 +71,6 @@ namespace PiSubmarine::Bq25792
 			m_Request.Tag = "ReadAsync";
 
 			m_HasRequest = true;
-			printf("ReadAsync Set True\n");
 			return true;
 		}
 
@@ -91,7 +90,6 @@ namespace PiSubmarine::Bq25792
 			m_Request.Tag = "WriteAsync";
 
 			m_HasRequest = true;
-			printf("WriteAsync Set True\n");
 			return true;
 		}
 

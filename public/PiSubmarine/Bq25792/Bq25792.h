@@ -373,6 +373,7 @@ namespace PiSubmarine::Bq25792
 			{
 				m_HasError = true;
 				m_IsTransactionInProgress = false;
+				return;
 			}
 
 			m_HasError = false;

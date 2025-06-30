@@ -71,4 +71,41 @@ namespace PiSubmarine::Bq25792
 
 		ASSERT_EQ(mockData, mockDataWriteExpected);
 	}
+
+	TEST(Bq25792Test, WriteDirtyFailure)
+	{
+		std::array<uint8_t, 0x49> mockData = { 0x26, 0x6, 0x90, 0x00, 0x64, 0x24, 0x1, 0x2c, 0xc3, 0x5, 0xe3, 0x0, 0xdc, 0x4b, 0x3d, 0xa2, 0x85, 0x40, 0x0, 0x1, 0x16, 0xaa, 0xc0, 0x7a, 0x54, 0x0, 0x32, 0x20, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xf9, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3c, 0x6a, 0x3c, 0x77, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 0x0, 0x0, 0x0, 0x8 };
+
+		I2CDriverMock driver{ mockData };
+		Bq25792<I2CDriverMock> device{ driver };
+
+		bool readStarted = device.Read();
+		ASSERT_TRUE(readStarted);
+		while (device.IsTransactionInProgress())
+		{
+			std::this_thread::sleep_for(100ms);
+		}
+
+		MilliVolts vsysmin = device.GetMinimalSystemVoltage();
+		ASSERT_EQ(vsysmin, 12000_mV);
+		bool wdRst = device.GetWdRst();
+		ASSERT_FALSE(wdRst);
+
+		vsysmin = 14250_mV;
+		device.SetMinimalSystemVoltage(14250_mV); // Will be 0b00101111 or 0x2F
+		device.SetChargeCurrentLimit(3000_mA);
+		device.SetWdRst(true);
+		bool writeStarted = device.WriteDirty();
+
+		ASSERT_TRUE(writeStarted);
+
+		auto start = std::chrono::high_resolution_clock::now();
+		while (device.IsTransactionInProgress() && std::chrono::high_resolution_clock::now() - start < 3000ms)
+		{
+			std::this_thread::sleep_for(80ms);
+			driver.SetSimulateError(true);
+		}
+
+		ASSERT_TRUE(device.HasError());
+	}
 }
