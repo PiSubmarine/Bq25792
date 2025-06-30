@@ -19,6 +19,7 @@ namespace PiSubmarine::Bq25792
 		std::vector<uint8_t> TxData;
 		I2CCallback Callback;
 		bool IsWrite = false;
+		std::string Tag;
 	};
 
 	class I2CDriverMock
@@ -67,8 +68,10 @@ namespace PiSubmarine::Bq25792
 			m_Request.RxLen = len;
 			m_Request.Callback = callback;
 			m_Request.IsWrite = false;
+			m_Request.Tag = "ReadAsync";
 
 			m_HasRequest = true;
+			printf("ReadAsync Set True\n");
 			return true;
 		}
 
@@ -85,21 +88,22 @@ namespace PiSubmarine::Bq25792
 			memcpy(m_Request.TxData.data(), txData, len);
 			m_Request.Callback = callback;
 			m_Request.IsWrite = true;
+			m_Request.Tag = "WriteAsync";
 
 			m_HasRequest = true;
+			printf("WriteAsync Set True\n");
 			return true;
 		}
 
 	private:
-		std::jthread m_WorkerThread;
 		std::array<uint8_t, 0x49>& m_Data;
 		std::chrono::milliseconds m_TransactionDelay = std::chrono::milliseconds(250);
-		I2CRequest m_Request;
+		I2CRequest m_Request{ 0 };
 		bool m_SimalateError = false;
 		bool m_HasRequest = false;
 		uint8_t m_DataOffset = 0;
-
 		std::mutex m_Mutex;
+		std::jthread m_WorkerThread;
 
 		void WorkerMethod(std::stop_token st)
 		{
@@ -125,12 +129,12 @@ namespace PiSubmarine::Bq25792
 					ok = Read(m_Request.DeviceAddress, m_Request.RxData, m_Request.RxLen);
 				}
 
-				m_Request.Callback(m_Request.DeviceAddress, ok);
-
 				{
 					std::lock_guard lock(m_Mutex);
 					m_HasRequest = false;
 				}
+
+				m_Request.Callback(m_Request.DeviceAddress, ok);
 			}
 		}
 	};

@@ -3,6 +3,7 @@
 #include "PiSubmarine/RegUtils.h"
 #include "PiSubmarine/Bq25792/Units.h"
 #include <functional>
+#include <bitset>
 
 namespace PiSubmarine::Bq25792
 {
@@ -151,7 +152,9 @@ namespace PiSubmarine::Bq25792
 		/// <returns>True if transaction was successfully started.</returns>
 		bool Read()
 		{
-			return Read(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+			std::bitset<MemorySize> regs;
+			regs.set();
+			return Read(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
 		}
 
 		/// <summary>
@@ -161,8 +164,10 @@ namespace PiSubmarine::Bq25792
 		/// <returns>True if transaction was successfully started.</returns>
 		bool Read(RegOffset reg)
 		{
+			std::bitset<MemorySize> regs;
+			regs.set(RegUtils::ToInt(reg));
 			size_t regSize = GetRegisterSize(reg);
-			return Read(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
+			return Read(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
 		}
 
 		/// <summary>
@@ -171,7 +176,9 @@ namespace PiSubmarine::Bq25792
 		/// <returns>True if transaction was successfully started.</returns>
 		bool Write()
 		{
-			return Write(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size());
+			std::bitset<MemorySize> regs;
+			regs.set();
+			return Write(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
 		}
 
 		/// <summary>
@@ -182,7 +189,22 @@ namespace PiSubmarine::Bq25792
 		bool Write(RegOffset reg)
 		{
 			size_t regSize = GetRegisterSize(reg);
-			return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize);
+			std::bitset<MemorySize> regs;
+			regs.set(RegUtils::ToInt(reg));
+			return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
+		}
+
+		bool WriteDirty()
+		{
+			if (m_IsTransactionInProgress)
+			{
+				return false;
+			}
+
+			m_HasError = false;
+			m_IsTransactionInProgress = true;
+
+			return WriteDirtyInternal(RegOffset{0});
 		}
 
 		/// <summary>
@@ -203,6 +225,7 @@ namespace PiSubmarine::Bq25792
 		{
 			uint8_t value = (valueMv.Value - 2500) / 250;
 			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::MinimalSystemVoltage)] = true;
 		}
 
 		/// <summary>
@@ -223,11 +246,13 @@ namespace PiSubmarine::Bq25792
 		{
 			uint16_t value = valueMa.Value / 10;
 			RegUtils::Write<uint16_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargeCurrentLimit)] = true;
 		}
 
 		void SetTsIgnore(bool value)
 		{
 			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::NtcControl1)] = true;
 		}
 
 		bool GetTsIgnore()
@@ -238,6 +263,7 @@ namespace PiSubmarine::Bq25792
 		void SetWdRst(bool value)
 		{
 			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
 		}
 
 		bool GetWdRst()
@@ -253,8 +279,9 @@ namespace PiSubmarine::Bq25792
 		std::array<uint8_t, MemorySize> m_ChargerMemoryBuffer{0};
 		bool m_IsTransactionInProgress = false;
 		bool m_HasError = false;
+		std::bitset<MemorySize> m_DirtyRegs{ 0 };
 
-		bool Read(uint8_t offset, uint8_t* data, size_t size)
+		bool Read(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs)
 		{
 			if (m_IsTransactionInProgress)
 			{
@@ -267,7 +294,7 @@ namespace PiSubmarine::Bq25792
 				return false;
 			}
 
-			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this](uint8_t cbAddress, bool cbOk) {I2CCallback(cbAddress, cbOk); });
+			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this, regs](uint8_t cbAddress, bool cbOk) {ReadCallback(cbAddress, regs, cbOk); });
 			if (transactionStarted)
 			{
 				m_IsTransactionInProgress = true;
@@ -276,7 +303,7 @@ namespace PiSubmarine::Bq25792
 			return transactionStarted;
 		}
 
-		bool Write(uint8_t offset, uint8_t* data, size_t size)
+		bool Write(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs)
 		{
 			if (m_IsTransactionInProgress)
 			{
@@ -290,7 +317,7 @@ namespace PiSubmarine::Bq25792
 			buffer[0] = offset;
 			memcpy(buffer.data() + 1, data, size);
 
-			bool transactionStarted = m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this](uint8_t cbAddress, bool cbOk) {I2CCallback(cbAddress, cbOk); });
+			bool transactionStarted = m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, regs](uint8_t cbAddress, bool cbOk) {WriteCallback(cbAddress, regs, cbOk); });
 			if (transactionStarted)
 			{
 				m_IsTransactionInProgress = true;
@@ -299,10 +326,69 @@ namespace PiSubmarine::Bq25792
 			return transactionStarted;
 		}
 
-		void I2CCallback(uint8_t deviceAddress, bool ok)
+		void ReadCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok)
 		{
 			m_HasError = !ok;
 			m_IsTransactionInProgress = false;
+
+			if (ok)
+			{
+				m_DirtyRegs &= ~regs;
+			}
+		}
+
+		void WriteCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok)
+		{
+			m_HasError = !ok;
+			m_IsTransactionInProgress = false;
+
+			if (ok)
+			{
+				m_DirtyRegs &= ~regs;
+			}
+		}
+
+		bool WriteDirtyInternal(RegOffset regNext)
+		{
+			for (size_t i = RegUtils::ToInt(regNext); i < m_DirtyRegs.size(); i++)
+			{
+				if (!m_DirtyRegs[i])
+				{
+					continue;
+				}
+				RegOffset reg = static_cast<RegOffset>(i);
+				
+				uint8_t regSize = GetRegisterSize(reg);
+				std::vector<uint8_t> buffer;
+				buffer.resize(regSize + 1);
+				buffer[0] = i;
+				memcpy(buffer.data() + 1, m_ChargerMemoryBuffer.data() + i, regSize);
+				return m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, reg](uint8_t cbAddress, bool cbOk) {WriteDirtyCallback(cbAddress, reg, cbOk); });
+			}
+		}
+
+		void WriteDirtyCallback(uint8_t deviceAddress, RegOffset reg, bool ok)
+		{
+			if (!ok)
+			{
+				m_HasError = true;
+				m_IsTransactionInProgress = false;
+			}
+
+			m_HasError = false;
+			m_DirtyRegs[RegUtils::ToInt(reg)] = false;
+			if (m_DirtyRegs == 0)
+			{
+				m_IsTransactionInProgress = false;
+				return;
+			}
+
+			if (!WriteDirtyInternal(static_cast<RegOffset>(RegUtils::ToInt(reg) + 1)))
+			{
+				m_HasError = true;
+				m_IsTransactionInProgress = false;
+				return;
+			}
 		}
 	};
 
