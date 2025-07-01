@@ -462,7 +462,7 @@ namespace PiSubmarine::Bq25792
 		MilliAmperes GetIbatCurrent() const
 		{
 			int16_t value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbatAdc), 0, 16);
-			return MilliAmperes(sValue);
+			return MilliAmperes(value);
 		}
 
 		MilliVolts GetVbusVoltage() const
