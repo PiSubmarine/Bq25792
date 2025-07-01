@@ -455,15 +455,13 @@ namespace PiSubmarine::Bq25792
 
 		MilliAmperes GetIbusCurrent() const
 		{
-			auto isubAdc = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbusAdc), 0, 16);
-			int16_t sValue = RegUtils::ConvertTwosComplement(isubAdc);
-			return MilliAmperes(sValue);
+			auto isubAdc = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbusAdc), 0, 16);
+			return MilliAmperes(isubAdc);
 		}
 
 		MilliAmperes GetIbatCurrent() const
 		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbatAdc), 0, 16);
-			int16_t sValue = RegUtils::ConvertTwosComplement(value);
+			int16_t value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbatAdc), 0, 16);
 			return MilliAmperes(sValue);
 		}
 
@@ -493,9 +491,8 @@ namespace PiSubmarine::Bq25792
 
 		Celcius GetDieTemperature() const
 		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TdieAdc), 0, 16);
-			int16_t sValue = RegUtils::ConvertTwosComplement(value);
-			return Celcius(sValue);
+			int16_t value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TdieAdc), 0, 16);
+			return Celcius(value);
 		}
 
 		MilliVolts GetUsbDataPlusVoltage() const
