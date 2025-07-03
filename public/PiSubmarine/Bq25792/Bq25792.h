@@ -8,6 +8,8 @@
 
 namespace PiSubmarine::Bq25792
 {
+	using WaitFunc = std::function<void(std::chrono::milliseconds)>;
+
 	enum class RegOffset : uint8_t
 	{
 		MinimalSystemVoltage = 0x00,
@@ -188,6 +190,15 @@ namespace PiSubmarine::Bq25792
 			return m_HasError;
 		}
 
+		bool WaitForTransaction(WaitFunc waitFunc)
+		{
+			while (IsTransactionInProgress())
+			{
+				waitFunc(std::chrono::milliseconds(10));
+			}
+			return !HasError();
+		}
+
 		/// <summary>
 		/// Reads all registers.
 		/// </summary>
@@ -197,6 +208,28 @@ namespace PiSubmarine::Bq25792
 			std::bitset<MemorySize> regs;
 			regs.set();
 			return Read(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
+		}
+
+		bool ReadAndWait(WaitFunc waitFunc)
+		{
+			if (!Read())
+			{
+				return false;
+			}
+
+			WaitForTransaction(waitFunc);
+			return !HasError();
+		}
+
+		bool ReadAndWait(RegOffset reg, WaitFunc waitFunc)
+		{
+			if (!Read(reg))
+			{
+				return false;
+			}
+
+			WaitForTransaction(waitFunc);
+			return !HasError();
 		}
 
 		/// <summary>
@@ -234,6 +267,17 @@ namespace PiSubmarine::Bq25792
 			std::bitset<MemorySize> regs;
 			regs.set(RegUtils::ToInt(reg));
 			return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
+		}
+
+		bool WriteAndWait(RegOffset reg, WaitFunc waitFunc)
+		{
+			if (!Write(reg))
+			{
+				return false;
+			}
+
+			WaitForTransaction(waitFunc);
+			return !HasError();
 		}
 
 		/// <summary>
