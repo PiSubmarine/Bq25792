@@ -161,6 +161,18 @@ namespace PiSubmarine::Bq25792
 		Disable = 3
 	};
 
+	enum class Watchdog
+	{
+		Disable = 0,
+		Sec0_5 = 1,
+		Sec1 = 2,
+		Sec2,
+		Sec20,
+		Sec40,
+		Sec80,
+		Sec160
+	};
+
 	template<PiSubmarine::Api::Internal::I2C::DriverConcept I2CDriver>
 	class Device
 	{
@@ -419,6 +431,17 @@ namespace PiSubmarine::Bq25792
 		bool GetWdRst()
 		{
 			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
+		}
+
+		void SetWatchdog(Watchdog value)
+		{
+			RegUtils::Write<Watchdog, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
+		}
+
+		Watchdog GetWatchdog() const
+		{
+			return RegUtils::Read<Watchdog, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 0, 3);
 		}
 		
 		/// <summary>
