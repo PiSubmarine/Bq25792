@@ -129,7 +129,7 @@ namespace PiSubmarine::Bq25792
 		FastCharge = 3,
 		TaperCharge = 4,
 		TopOffTimerActiveCharging = 6,
-		ChargindTerminationDone = 7
+		ChargingTerminationDone = 7
 	};
 
 	enum class VbusStatus : uint8_t
