@@ -574,6 +574,18 @@ namespace PiSubmarine::Bq25792
 			return MilliVolts(value);
 		}
 
+		bool IsAutomaticDpDmDetectionEnabled() const
+		{
+			uint8_t value = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
+			return value;
+		}
+
+		void SetAutomaticDpDmDetectionEnabled(bool value)
+		{
+			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
+			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl2)] = true;
+		}
+
 	private:
 		constexpr static size_t MemorySize = 0x49;
 
