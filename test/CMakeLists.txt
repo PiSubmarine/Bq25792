@@ -9,9 +9,8 @@ set(PiSubmarine.Bq25792.Test.Sources
 
 enable_testing()
 
-# spdlog
 find_package(spdlog)
-find_package(gtest)
+find_package(GTest)
 
 add_executable(PiSubmarine.Bq25792.Test ${PiSubmarine.Bq25792.Test.Sources})
 target_compile_features(PiSubmarine.Bq25792.Test PRIVATE cxx_std_23)
