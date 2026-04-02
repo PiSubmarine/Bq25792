@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "PiSubmarine/Volts.h"
 #include "PiSubmarine/Amperes.h"
-#include "PiSubmarine/Celcius.h"
+#include "PiSubmarine/Celsius.h"
 
 namespace PiSubmarine::Bq25792
 {
@@ -108,9 +108,9 @@ namespace PiSubmarine::Bq25792
 			return Halves * 0.5f;
 		}
 
-		constexpr operator PiSubmarine::Celcius() const
+		constexpr operator PiSubmarine::Celsius() const
 		{
-			return PiSubmarine::Celcius(ToFloat());
+			return PiSubmarine::Celsius(ToFloat());
 		}
 	};
 

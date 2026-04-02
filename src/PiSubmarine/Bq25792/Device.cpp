@@ -4,122 +4,30 @@
 
 namespace PiSubmarine::Bq25792
 {
-    Device::Device(PiSubmarine::I2C::Api::IDriverAsync& driver): m_Driver(driver)
+    Device::Device(PiSubmarine::I2C::Api::IDriver& driver): m_Driver(driver)
     {
 
     }
 
-    bool Device::IsTransactionInProgress() const
+    std::expected<MilliVolts, ProtocolError> Device::GetMinimalSystemVoltage() const
     {
-        return m_IsTransactionInProgress;
-    }
-
-    bool Device::HasError() const
-    {
-        return m_HasError;
-    }
-
-    bool Device::WaitForTransaction(const WaitFunc& waitFunc) const
-    {
-        while (IsTransactionInProgress())
+        auto field = ReadField<RegOffset::MinimalSystemVoltage>(0, 6);
+        if (field.has_value())
         {
-            waitFunc(std::chrono::milliseconds(10));
+            return 2500_mV + MilliVolts(field.value()) * 250_mV;
         }
-        return !HasError();
+        return std::unexpected(field.error());
     }
 
-    bool Device::Read()
-    {
-        std::bitset<MemorySize> regs;
-        regs.set();
-        return Read(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
-    }
-
-    bool Device::ReadAndWait(const WaitFunc& waitFunc)
-    {
-        if (!Read())
-        {
-            return false;
-        }
-
-        return WaitForTransaction(waitFunc);
-    }
-
-    bool Device::ReadAndWait(RegOffset reg, const WaitFunc& waitFunc)
-    {
-        if (!Read(reg))
-        {
-            return false;
-        }
-
-        return WaitForTransaction(waitFunc);
-    }
-
-    bool Device::Read(RegOffset reg)
-    {
-        std::bitset<MemorySize> regs;
-        regs.set(RegUtils::ToInt(reg));
-        size_t regSize = GetRegisterSize(reg);
-        return Read(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
-    }
-
-    bool Device::Write()
-    {
-        std::bitset<MemorySize> regs;
-        regs.set();
-        return Write(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
-    }
-
-    bool Device::Write(RegOffset reg)
-    {
-        size_t regSize = GetRegisterSize(reg);
-        std::bitset<MemorySize> regs;
-        regs.set(RegUtils::ToInt(reg));
-        return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
-    }
-
-    bool Device::WriteAndWait(RegOffset reg, const WaitFunc& waitFunc)
-    {
-        if (!Write(reg))
-        {
-            return false;
-        }
-
-        return WaitForTransaction(waitFunc);
-    }
-
-    bool Device::WriteDirty()
-    {
-        if (m_IsTransactionInProgress)
-        {
-            return false;
-        }
-
-        m_HasError = false;
-        m_IsTransactionInProgress = true;
-
-        return WriteDirtyInternal(RegOffset{0});
-    }
-
-    bool Device::HasDirtyRegisters() const
-    {
-        return m_DirtyRegs.any();
-    }
-
-    MilliVolts Device::GetMinimalSystemVoltage() const
-    {
-        auto vsysMin = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
-        return 2500_mV + MilliVolts(vsysMin) * 250_mV;
-    }
-
-    void Device::SetMinimalSystemVoltage(MilliVolts valueMv)
+    ProtocolError Device::SetMinimalSystemVoltage(MilliVolts valueMv) const
     {
         uint8_t value = (valueMv.Value - 2500) / 250;
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::MinimalSystemVoltage)] = true;
+        return WriteField<RegOffset::MinimalSystemVoltage>(value, 0, 6);
     }
 
-    MilliAmperes Device::GetChargeCurrentLimit() const
+    /*
+
+    std::expected<MilliAmperes, ProtocolError> Device::GetChargeCurrentLimit() const
     {
         auto Ichg = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
         return MilliAmperes(Ichg) * 10_mA;
@@ -347,123 +255,25 @@ namespace PiSubmarine::Bq25792
         RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
         m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl2)] = true;
     }
+*/
 
-    bool Device::Read(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs)
+    ProtocolError Device::Read(uint8_t offset, uint8_t* data, size_t size) const
     {
-        if (m_IsTransactionInProgress)
+        if (!m_Driver.Write(Address, &offset, 1))
         {
-            return false;
+            return ProtocolError::WriteError;
         }
 
-        auto writeCallback = [this, data, size, regs](uint8_t deviceAddress, bool success)
-        {
-            if (!success)
-            {
-                m_IsTransactionInProgress = false;
-                return;
-            }
-            m_IsTransactionInProgress = m_Driver.ReadAsync(Address, data, size, [this, regs](uint8_t cbAddress, bool cbOk) {
-                ReadCallback(cbAddress, regs, cbOk);
-            });
-        };
-
-        bool writeStarted = m_Driver.WriteAsync(Address, &offset, 1, writeCallback);
-        m_IsTransactionInProgress = writeStarted;
-        m_HasError = !writeStarted;
-
-        return writeStarted;
+        return m_Driver.Read(Address, data, size) ? ProtocolError::Ok : ProtocolError::ReadError;
     }
 
-    bool Device::Write(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs)
+    ProtocolError Device::Write(uint8_t offset, uint8_t* data, size_t size) const
     {
-        if (m_IsTransactionInProgress)
-        {
-            return false;
-        }
-
-        m_HasError = false;
-
         std::vector<uint8_t> buffer;
         buffer.resize(size + 1);
         buffer[0] = offset;
         memcpy(buffer.data() + 1, data, size);
 
-        bool transactionStarted = m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, regs](uint8_t cbAddress, bool cbOk) {WriteCallback(cbAddress, regs, cbOk); });
-        if (transactionStarted)
-        {
-            m_IsTransactionInProgress = true;
-        }
-
-        return transactionStarted;
-    }
-
-    void Device::ReadCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok)
-    {
-        (void)deviceAddress;
-        m_HasError = !ok;
-        m_IsTransactionInProgress = false;
-
-        if (ok)
-        {
-            m_DirtyRegs &= ~regs;
-        }
-    }
-
-    void Device::WriteCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok)
-    {
-        (void)deviceAddress;
-        m_HasError = !ok;
-        m_IsTransactionInProgress = false;
-
-        if (ok)
-        {
-            m_DirtyRegs &= ~regs;
-        }
-    }
-
-    bool Device::WriteDirtyInternal(RegOffset regNext)
-    {
-        for (size_t i = RegUtils::ToInt(regNext); i < m_DirtyRegs.size(); i++)
-        {
-            if (!m_DirtyRegs[i])
-            {
-                continue;
-            }
-            auto reg = static_cast<RegOffset>(i);
-
-            uint8_t regSize = GetRegisterSize(reg);
-            std::vector<uint8_t> buffer;
-            buffer.resize(regSize + 1);
-            buffer[0] = i;
-            memcpy(buffer.data() + 1, m_ChargerMemoryBuffer.data() + i, regSize);
-            return m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, reg](uint8_t cbAddress, bool cbOk) {WriteDirtyCallback(cbAddress, reg, cbOk); });
-        }
-        return false;
-    }
-
-    void Device::WriteDirtyCallback(uint8_t deviceAddress, RegOffset reg, bool ok)
-    {
-        (void)deviceAddress;
-        if (!ok)
-        {
-            m_HasError = true;
-            m_IsTransactionInProgress = false;
-            return;
-        }
-
-        m_HasError = false;
-        m_DirtyRegs[RegUtils::ToInt(reg)] = false;
-        if (m_DirtyRegs == 0)
-        {
-            m_IsTransactionInProgress = false;
-            return;
-        }
-
-        if (!WriteDirtyInternal(static_cast<RegOffset>(RegUtils::ToInt(reg) + 1)))
-        {
-            m_HasError = true;
-            m_IsTransactionInProgress = false;
-            return;
-        }
+        return m_Driver.Write(Address, buffer.data(), buffer.size()) ? ProtocolError::Ok : ProtocolError::WriteError;
     }
 }
