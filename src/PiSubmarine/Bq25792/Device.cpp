@@ -513,7 +513,7 @@ namespace PiSubmarine::Bq25792
         return ReadFieldEnum<RegOffset::DpDmDriver, DmDac>(5, 3);
     }
 
-    ProtocolError Device::StDmDac(DmDac value) const
+    ProtocolError Device::SetDmDac(DmDac value) const
     {
         return WriteFieldEnum<RegOffset::DpDmDriver>(value, 5, 3);
     }

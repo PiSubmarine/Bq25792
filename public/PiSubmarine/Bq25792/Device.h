@@ -487,7 +487,7 @@ namespace PiSubmarine::Bq25792
         [[nodiscard]] std::expected<DpDac, ProtocolError> GetDpDac() const;
         [[nodiscard]] ProtocolError SetDpDac(DpDac value) const;
         [[nodiscard]] std::expected<DmDac, ProtocolError> GetDmDac() const;
-        [[nodiscard]] ProtocolError StDmDac(DmDac value) const;
+        [[nodiscard]] ProtocolError SetDmDac(DmDac value) const;
 
     private:
         constexpr static size_t MemorySize = 0x49;
