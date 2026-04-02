@@ -1,10 +1,12 @@
 #pragma once
 
-#include "PiSubmarine/RegUtils.h"
-#include "PiSubmarine/Bq25792/Units.h"
-#include "PiSubmarine/Api/Internal/I2C/DriverConcept.h"
 #include <functional>
 #include <bitset>
+#include <chrono>
+#include "PiSubmarine/RegUtils.h"
+#include "PiSubmarine/Bq25792/Units.h"
+#include "PiSubmarine/I2C/Api/IDriverAsync.h"
+#include "PiSubmarine/NormalizedIntFraction.h"
 
 namespace PiSubmarine::Bq25792
 {
@@ -98,7 +100,7 @@ namespace PiSubmarine::Bq25792
 
 	constexpr uint8_t GetRegisterSize(RegOffset reg)
 	{
-		uint8_t bitPos = static_cast<uint8_t>(reg);
+		auto bitPos = static_cast<uint8_t>(reg);
 		if (bitPos < 64)
 		{
 			return RegSizesA & (1ULL << bitPos) ? 2 : 1;
@@ -173,542 +175,197 @@ namespace PiSubmarine::Bq25792
 		Sec160
 	};
 
-	template<PiSubmarine::Api::Internal::I2C::DriverConcept I2CDriver>
+	enum class AdcSpeed
+	{
+		Resolution15bits = 0,
+		Resolution14bits,
+		Resolution13bits,
+		Resolution12bits
+	};
+
 	class Device
 	{
 	public:
 		constexpr static uint8_t Address = 0x6B;
 
-		Device(I2CDriver& driver) : m_Driver(driver)
-		{
-
-		}
+		explicit Device(I2C::Api::IDriverAsync& driver);
 
 		/// <summary>
 		/// Returns true if there is a pending read/write I2C transation.
 		/// </summary>
 		/// <returns>True if transaction not finished.</returns>
-		bool IsTransactionInProgress()
-		{
-			return m_IsTransactionInProgress;
-		}
+		[[nodiscard]] bool IsTransactionInProgress() const;
 
 		/// <summary>
 		/// Returns true if previous transaction failed. Cleared to false upon new Read or Write.
 		/// </summary>
 		/// <returns>True if has error.</returns>
-		bool HasError()
-		{
-			return m_HasError;
-		}
+		[[nodiscard]] bool HasError() const;
 
-		bool WaitForTransaction(WaitFunc waitFunc)
-		{
-			while (IsTransactionInProgress())
-			{
-				waitFunc(std::chrono::milliseconds(10));
-			}
-			return !HasError();
-		}
+		bool WaitForTransaction(const WaitFunc& waitFunc) const;
 
 		/// <summary>
 		/// Reads all registers.
 		/// </summary>
 		/// <returns>True if transaction was successfully started.</returns>
-		bool Read()
-		{
-			std::bitset<MemorySize> regs;
-			regs.set();
-			return Read(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
-		}
+		bool Read();
 
-		bool ReadAndWait(WaitFunc waitFunc)
-		{
-			if (!Read())
-			{
-				return false;
-			}
+		bool ReadAndWait(const WaitFunc& waitFunc);
 
-			WaitForTransaction(waitFunc);
-			return !HasError();
-		}
-
-		bool ReadAndWait(RegOffset reg, WaitFunc waitFunc)
-		{
-			if (!Read(reg))
-			{
-				return false;
-			}
-
-			WaitForTransaction(waitFunc);
-			return !HasError();
-		}
+		bool ReadAndWait(RegOffset reg, const WaitFunc& waitFunc);
 
 		/// <summary>
 		/// Reads specific register.
 		/// </summary>
 		/// <param name="reg">Register offset</param>
 		/// <returns>True if transaction was successfully started.</returns>
-		bool Read(RegOffset reg)
-		{
-			std::bitset<MemorySize> regs;
-			regs.set(RegUtils::ToInt(reg));
-			size_t regSize = GetRegisterSize(reg);
-			return Read(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
-		}
+		bool Read(RegOffset reg);
 
 		/// <summary>
 		/// Writes all registers.
 		/// </summary>
 		/// <returns>True if transaction was successfully started.</returns>
-		bool Write()
-		{
-			std::bitset<MemorySize> regs;
-			regs.set();
-			return Write(0, m_ChargerMemoryBuffer.data(), m_ChargerMemoryBuffer.size(), regs);
-		}
+		bool Write();
 
 		/// <summary>
 		/// Writes specific register.
 		/// </summary>
 		/// <param name="reg">Register offset</param>
 		/// <returns>True if transaction was successfully started.</returns>
-		bool Write(RegOffset reg)
-		{
-			size_t regSize = GetRegisterSize(reg);
-			std::bitset<MemorySize> regs;
-			regs.set(RegUtils::ToInt(reg));
-			return Write(static_cast<uint8_t>(reg), m_ChargerMemoryBuffer.data() + static_cast<size_t>(reg), regSize, regs);
-		}
+		bool Write(RegOffset reg);
 
-		bool WriteAndWait(RegOffset reg, WaitFunc waitFunc)
-		{
-			if (!Write(reg))
-			{
-				return false;
-			}
-
-			WaitForTransaction(waitFunc);
-			return !HasError();
-		}
+		bool WriteAndWait(RegOffset reg, const WaitFunc& waitFunc);
 
 		/// <summary>
 		/// Writes all dirty registers in a sequence of transactions.
 		/// </summary>
 		/// <returns>True if transaction was successfully started. False if there was an error or no register was dirty.</returns>
-		bool WriteDirty()
-		{
-			if (m_IsTransactionInProgress)
-			{
-				return false;
-			}
+		bool WriteDirty();
 
-			m_HasError = false;
-			m_IsTransactionInProgress = true;
-
-			return WriteDirtyInternal(RegOffset{0});
-		}
-
-		bool HasDirtyRegisters()
-		{
-			return m_DirtyRegs.any();
-		}
+		[[nodiscard]] bool HasDirtyRegisters() const;
 
 		/// <summary>
 		/// Gets Minimal System Voltage (VSYSMIN) from Memory Buffer.
 		/// </summary>
 		/// <returns>VSYSMIN in mV.</returns>
-		MilliVolts GetMinimalSystemVoltage() const
-		{
-			uint8_t vsysMin = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
-			return 2500_mV + MilliVolts(vsysMin) * 250_mV;
-		}
+		[[nodiscard]] MilliVolts GetMinimalSystemVoltage() const;
 
 		/// <summary>
 		/// Sets minimal system voltage. Range: 2500mV - 16000mV, bit step size: 250mV
 		/// </summary>
 		/// <param name="valueMv">Voltage in mV</param>
-		void SetMinimalSystemVoltage(MilliVolts valueMv)
-		{
-			uint8_t value = (valueMv.Value - 2500) / 250;
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::MinimalSystemVoltage), 0, 6);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::MinimalSystemVoltage)] = true;
-		}
+		void SetMinimalSystemVoltage(MilliVolts valueMv);
 
 		/// <summary>
 		/// Gets maxium charge current.
 		/// </summary>
 		/// <returns>Current in mA</returns>
-		constexpr MilliAmperes GetChargeCurrentLimit() const
-		{
-			uint16_t Ichg = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
-			return MilliAmperes(Ichg) * 10_mA;
-		}
+		[[nodiscard]] MilliAmperes GetChargeCurrentLimit() const;
 
 		/// <summary>
 		/// Sets maximum charge current. Range: 50mA - 5000mA, bit step size: 10mA.
 		/// </summary>
 		/// <param name="valueMa">Current in mA</param>
-		void SetChargeCurrentLimit(MilliAmperes valueMa)
-		{
-			uint16_t value = valueMa.Value / 10;
-			RegUtils::Write<uint16_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargeCurrentLimit)] = true;
-		}
+		void SetChargeCurrentLimit(MilliAmperes valueMa);
 
-		IbatReg GetOtgMaxCurrent() const
-		{
-			return RegUtils::Read<IbatReg, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 3, 2);
-		}
+		[[nodiscard]] IbatReg GetOtgMaxCurrent() const;
 
-		void SetOtgMaxCurrent(IbatReg value)
-		{
-			RegUtils::Write<IbatReg, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
-		}
+		void SetOtgMaxCurrent(IbatReg value);
 
-		bool IsSfetPresent() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 7, 1);
-		}
+		[[nodiscard]] bool IsSfetPresent() const;
 
-		void SetSfetPresent(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 7, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
-		}
+		void SetSfetPresent(bool value);
 
-		bool IsDischargeCurrentSensingEnabled() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 5, 1);
-		}
+		[[nodiscard]] bool IsDischargeCurrentSensingEnabled() const;
 
-		void SetDischargeCurrentSensingEnabled(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 5, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
-		}
+		void SetDischargeCurrentSensingEnabled(bool value);
 
-		bool IsIlimHizCurrentLimitEnabled() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 1, 1);
-		}
+		[[nodiscard]] bool IsIlimHizCurrentLimitEnabled() const;
 
-		void SetIlimHizCurrentLimitEnabled(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 1, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
-		}
+		void SetIlimHizCurrentLimitEnabled(bool value);
 
-		bool IsDischargeOcpEnabled() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
-		}
+		[[nodiscard]] bool IsDischargeOcpEnabled() const;
 
-		void SetDischargeOcpEnabled(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
-		}
+		void SetDischargeOcpEnabled(bool value);
 
-		void SetTsIgnore(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::NtcControl1)] = true;
-		}
+		void SetTsIgnore(bool value);
 
-		bool GetTsIgnore()
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
-		}
+		[[nodiscard]] bool GetTsIgnore() const;
 
-		void SetWdRst(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
-		}
+		void SetWdRst(bool value);
 
-		bool GetWdRst()
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
-		}
+		[[nodiscard]] bool GetWdRst() const;
 
-		void SetWatchdog(Watchdog value)
-		{
-			RegUtils::Write<Watchdog, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
-		}
+		void SetWatchdog(Watchdog value);
 
-		Watchdog GetWatchdog() const
-		{
-			return RegUtils::Read<Watchdog, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 0, 3);
-		}
-		
-		/// <summary>
-		/// <para>0 - 15 bit effective resolution</para>
-		/// <para>1 - 14 bit effective resolution</para>
-		/// <para>2 - 13 bit effective resolution</para>
-		/// <para>3 - 12 bit effective resolution</para>
-		/// </summary>
-		/// <returns></returns>
-		uint8_t GetAdcSampleSpeed() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 4, 2);
-		}
+		[[nodiscard]] Watchdog GetWatchdog() const;
 
-		/// <summary>
-		/// <para>0 - 15 bit effective resolution</para>
-		/// <para>1 - 14 bit effective resolution</para>
-		/// <para>2 - 13 bit effective resolution</para>
-		/// <para>3 - 12 bit effective resolution</para>
-		/// </summary>
-		/// <param name="value">Sample speed in range [0, 3]</param>
-		void SetAdcSampleSpeed(uint8_t value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 4, 2);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
-		}
+		[[nodiscard]] AdcSpeed GetAdcSampleSpeed() const;
 
-		bool IsAdcEnabled() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
-		}
+		void SetAdcSampleSpeed(AdcSpeed value);
 
-		void SetAdcEnabled(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::AdcControl)] = true;
-		}
+		[[nodiscard]] bool IsAdcEnabled() const;
 
-		ChargerStatus0Flags GetChargerStatus0() const
-		{
-			return RegUtils::Read<ChargerStatus0Flags, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus0), 0, 8);
-		}
+		void SetAdcEnabled(bool value);
 
-		ChargeStatus GetChargeStatus() const
-		{
-			return RegUtils::Read<ChargeStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 5, 3);
-		}
+		[[nodiscard]] ChargerStatus0Flags GetChargerStatus0() const;
 
-		VbusStatus GetVbusStatus() const
-		{
-			return RegUtils::Read<VbusStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 1, 4);
-		}
+		[[nodiscard]] ChargeStatus GetChargeStatus() const;
 
-		bool IsBc12DetectionComplete() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 0, 1);
-		}
+		[[nodiscard]] VbusStatus GetVbusStatus() const;
 
-		IcoStatus GetIcoStatus() const
-		{
-			return RegUtils::Read<IcoStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 6, 2);
-		}
+		[[nodiscard]] bool IsBc12DetectionComplete() const;
 
-		bool IsInThermalRegulation() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 2, 1);
-		}
+		[[nodiscard]] IcoStatus GetIcoStatus() const;
 
-		bool IsDpDmDetectionOngoing() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 1, 1);
-		}
+		[[nodiscard]] bool IsInThermalRegulation() const;
 
-		bool IsBatteryPresent() const
-		{
-			return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 0, 1);
-		}
+		[[nodiscard]] bool IsDpDmDetectionOngoing() const;
 
-		MilliAmperes GetIbusCurrent() const
-		{
-			auto isubAdc = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbusAdc), 0, 16);
-			return MilliAmperes(isubAdc);
-		}
+		[[nodiscard]] bool IsBatteryPresent() const;
 
-		MilliAmperes GetIbatCurrent() const
-		{
-			int16_t value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbatAdc), 0, 16);
-			return MilliAmperes(value);
-		}
+		[[nodiscard]] MilliAmperes GetIbusCurrent() const;
 
-		MilliVolts GetVbusVoltage() const
-		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VbusAdc), 0, 16);
-			return MilliVolts(value);
-		}
+		[[nodiscard]] MilliAmperes GetIbatCurrent() const;
 
-		MilliVolts GetVbatVoltage() const
-		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VbatAdc), 0, 16);
-			return MilliVolts(value);
-		}
+		[[nodiscard]] MilliVolts GetVbusVoltage() const;
 
-		MilliVolts GetVsysVoltage() const
-		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VsysAdc), 0, 16);
-			return MilliVolts(value);
-		}
+		[[nodiscard]] MilliVolts GetVbatVoltage() const;
 
-		uint16_t GetTsPercentage() const
-		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TsAdc), 0, 16);
-			return value;
-		}
+		[[nodiscard]] MilliVolts GetVsysVoltage() const;
 
-		Celcius GetDieTemperature() const
-		{
-			int16_t value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TdieAdc), 0, 16);
-			return Celcius(value);
-		}
+		[[nodiscard]] NormalizedIntFraction<16> GetTsPercentage() const;
 
-		MilliVolts GetUsbDataPlusVoltage() const
-		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::DpAdc), 0, 16);
-			return MilliVolts(value);
-		}
+		[[nodiscard]] Celcius GetDieTemperature() const;
 
-		MilliVolts GetUsbDataMinusVoltage() const
-		{
-			uint16_t value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::DmAdc), 0, 16);
-			return MilliVolts(value);
-		}
+		[[nodiscard]] MilliVolts GetUsbDataPlusVoltage() const;
 
-		bool IsAutomaticDpDmDetectionEnabled() const
-		{
-			uint8_t value = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
-			return value;
-		}
+		[[nodiscard]] MilliVolts GetUsbDataMinusVoltage() const;
 
-		void SetAutomaticDpDmDetectionEnabled(bool value)
-		{
-			RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
-			m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl2)] = true;
-		}
+		[[nodiscard]] bool IsAutomaticDpDmDetectionEnabled() const;
+
+		void SetAutomaticDpDmDetectionEnabled(bool value);
 
 	private:
 		constexpr static size_t MemorySize = 0x49;
 
-		I2CDriver& m_Driver;
+		I2C::Api::IDriverAsync& m_Driver;
 		std::array<uint8_t, MemorySize> m_ChargerMemoryBuffer{0};
 		bool m_IsTransactionInProgress = false;
 		bool m_HasError = false;
 		std::bitset<MemorySize> m_DirtyRegs{ 0 };
 
-		bool Read(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs)
-		{
-			if (m_IsTransactionInProgress)
-			{
-				return false;
-			}
+		bool Read(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs);
 
-			m_HasError = !m_Driver.Write(Address, &offset, 1);
-			if (m_HasError)
-			{
-				return false;
-			}
+		bool Write(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs);
 
-			bool transactionStarted = m_Driver.ReadAsync(Address, data, size, [this, regs](uint8_t cbAddress, bool cbOk) {ReadCallback(cbAddress, regs, cbOk); });
-			if (transactionStarted)
-			{
-				m_IsTransactionInProgress = true;
-			}
+		void ReadCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok);
 
-			return transactionStarted;
-		}
+		void WriteCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok);
 
-		bool Write(uint8_t offset, uint8_t* data, size_t size, const std::bitset<MemorySize>& regs)
-		{
-			if (m_IsTransactionInProgress)
-			{
-				return false;
-			}
+		bool WriteDirtyInternal(RegOffset regNext);
 
-			m_HasError = false;
-
-			std::vector<uint8_t> buffer;
-			buffer.resize(size + 1);
-			buffer[0] = offset;
-			memcpy(buffer.data() + 1, data, size);
-
-			bool transactionStarted = m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, regs](uint8_t cbAddress, bool cbOk) {WriteCallback(cbAddress, regs, cbOk); });
-			if (transactionStarted)
-			{
-				m_IsTransactionInProgress = true;
-			}
-
-			return transactionStarted;
-		}
-
-		void ReadCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok)
-		{
-			(void)deviceAddress;
-			m_HasError = !ok;
-			m_IsTransactionInProgress = false;
-
-			if (ok)
-			{
-				m_DirtyRegs &= ~regs;
-			}
-		}
-
-		void WriteCallback(uint8_t deviceAddress, std::bitset<MemorySize> regs, bool ok)
-		{
-			(void)deviceAddress;
-			m_HasError = !ok;
-			m_IsTransactionInProgress = false;
-
-			if (ok)
-			{
-				m_DirtyRegs &= ~regs;
-			}
-		}
-
-		bool WriteDirtyInternal(RegOffset regNext)
-		{
-			for (size_t i = RegUtils::ToInt(regNext); i < m_DirtyRegs.size(); i++)
-			{
-				if (!m_DirtyRegs[i])
-				{
-					continue;
-				}
-				RegOffset reg = static_cast<RegOffset>(i);
-				
-				uint8_t regSize = GetRegisterSize(reg);
-				std::vector<uint8_t> buffer;
-				buffer.resize(regSize + 1);
-				buffer[0] = i;
-				memcpy(buffer.data() + 1, m_ChargerMemoryBuffer.data() + i, regSize);
-				return m_Driver.WriteAsync(Address, buffer.data(), buffer.size(), [this, reg](uint8_t cbAddress, bool cbOk) {WriteDirtyCallback(cbAddress, reg, cbOk); });
-			}
-			return false;
-		}
-
-		void WriteDirtyCallback(uint8_t deviceAddress, RegOffset reg, bool ok)
-		{
-			(void)deviceAddress;
-			if (!ok)
-			{
-				m_HasError = true;
-				m_IsTransactionInProgress = false;
-				return;
-			}
-
-			m_HasError = false;
-			m_DirtyRegs[RegUtils::ToInt(reg)] = false;
-			if (m_DirtyRegs == 0)
-			{
-				m_IsTransactionInProgress = false;
-				return;
-			}
-
-			if (!WriteDirtyInternal(static_cast<RegOffset>(RegUtils::ToInt(reg) + 1)))
-			{
-				m_HasError = true;
-				m_IsTransactionInProgress = false;
-				return;
-			}
-		}
+		void WriteDirtyCallback(uint8_t deviceAddress, RegOffset reg, bool ok);
 	};
 
 	/*

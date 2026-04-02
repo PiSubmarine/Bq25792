@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include "PiSubmarine/Volts.h"
+#include "PiSubmarine/Amperes.h"
+#include "PiSubmarine/Celcius.h"
 
 namespace PiSubmarine::Bq25792
 {
@@ -7,7 +10,10 @@ namespace PiSubmarine::Bq25792
 	{
 		int32_t Value;
 
-		explicit constexpr MilliVolts(int32_t v) : Value(v) {}
+		constexpr operator Volts() const
+		{
+			return Volts(Value * 1000);
+		}
 	};
 
 	constexpr bool operator==(MilliVolts lhs, MilliVolts rhs)
@@ -49,7 +55,10 @@ namespace PiSubmarine::Bq25792
 	{
 		int32_t Value;
 
-		explicit constexpr MilliAmperes(int32_t v) : Value(v) {}
+		constexpr operator Amperes() const
+		{
+			return Amperes(Value * 1000);
+		}
 	};
 
 	constexpr bool operator==(MilliAmperes lhs, MilliAmperes rhs)
@@ -97,6 +106,11 @@ namespace PiSubmarine::Bq25792
 		constexpr float ToFloat() const
 		{
 			return Halves * 0.5f;
+		}
+
+		constexpr operator PiSubmarine::Celcius() const
+		{
+			return PiSubmarine::Celcius(ToFloat());
 		}
 	};
 
