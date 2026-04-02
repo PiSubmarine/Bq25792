@@ -32,39 +32,39 @@ namespace PiSubmarine::Bq25792
         RechargeControl = 0x0A,
         VotgRegulation = 0x0B,
         IotgRegulation = 0x0D,
-        TimerControl = 0x0E,
-        ChargerControl0 = 0x0F,
+        TimerControl = 0x0E,        // Not implemented
+        ChargerControl0 = 0x0F,     // Not implemented
         ChargerControl1 = 0x10,
-        ChargerControl2 = 0x11,
-        ChargerControl3 = 0x12,
-        ChargerControl4 = 0x13,
-        ChargerControl5 = 0x14,
-        TemperatureControl = 0x016,
-        NtcControl0 = 0x17,
-        NtcControl1 = 0x18,
-        IcoCurrentLimit = 0x19,
+        ChargerControl2 = 0x11,     // Partially implemented
+        ChargerControl3 = 0x12,     // Not implemented
+        ChargerControl4 = 0x13,     // Not implemented
+        ChargerControl5 = 0x14,     // Partially implemented
+        TemperatureControl = 0x016, // Partially implemented
+        NtcControl0 = 0x17,         // Not implemented
+        NtcControl1 = 0x18,         // Partially implemented
+        IcoCurrentLimit = 0x19,     // Not implemented
         ChargerStatus0 = 0x1B,
         ChargerStatus1 = 0x1C,
         ChargerStatus2 = 0x1D,
-        ChargerStatus3 = 0x1E,
-        ChargerStatus4 = 0x1F,
+        ChargerStatus3 = 0x1E,      // Not implemented
+        ChargerStatus4 = 0x1F,      // Not implemented
         FaultStatus0 = 0x20,
         FaultStatus1 = 0x21,
-        ChargerFlag0 = 0x22,
-        ChargerFlag1 = 0x23,
-        ChargerFlag2 = 0x24,
-        ChargerFlag3 = 0x25,
-        FaultFlag0 = 0x26,
-        FaultFlag1 = 0x27,
-        ChargerMask0 = 0x28,
-        ChargerMask1 = 0x29,
-        ChargerMask2 = 0x2A,
-        ChargerMask3 = 0x2B,
-        FaultMask0 = 0x2C,
-        FaultMask1 = 0x2D,
-        AdcControl = 0x2E,
-        AdcFunctionDisable0 = 0x2F,
-        AdcFunctionDisable1 = 0x30,
+        ChargerFlag0 = 0x22,        // Not implemented
+        ChargerFlag1 = 0x23,        // Not implemented
+        ChargerFlag2 = 0x24,        // Not implemented
+        ChargerFlag3 = 0x25,        // Not implemented
+        FaultFlag0 = 0x26,          // Not implemented
+        FaultFlag1 = 0x27,          // Not implemented
+        ChargerMask0 = 0x28,        // Not implemented
+        ChargerMask1 = 0x29,        // Not implemented
+        ChargerMask2 = 0x2A,        // Not implemented
+        ChargerMask3 = 0x2B,        // Not implemented
+        FaultMask0 = 0x2C,          // Not implemented
+        FaultMask1 = 0x2D,          // Not implemented
+        AdcControl = 0x2E,          // Partially implemented
+        AdcFunctionDisable0 = 0x2F, // Not implemented
+        AdcFunctionDisable1 = 0x30, // Not implemented
         IbusAdc = 0x31,
         IbatAdc = 0x33,
         VbusAdc = 0x35,
@@ -77,7 +77,7 @@ namespace PiSubmarine::Bq25792
         DpAdc = 0x43,
         DmAdc = 0x45,
         DpDmDriver = 0x47,
-        PartInformation = 0x48
+        PartInformation = 0x48      // Not implemented
     };
 
     /// <summary>
@@ -141,6 +141,58 @@ namespace PiSubmarine::Bq25792
     template <size_t Bytes>
     using RegisterType_t = typename RegisterTypeSelector<Bytes>::type;
 
+    enum class FastChargeVoltageThreshold : uint8_t
+    {
+        Vreg15p,    // 15% x VREG
+        Vreg62p2,   // 62.2% x VREG
+        Vreg66p7,   // 66.7% x VREG
+        Vreg71p4   // 71.4% x VREG
+    };
+
+    struct PrechargeControl
+    {
+        FastChargeVoltageThreshold VoltageThreshold;
+        MilliAmperes CurrentLimit;
+    };
+
+    enum class Cells : uint8_t
+    {
+        Cells1,
+        Cells2,
+        Cells3,
+        Cells4
+    };
+
+    enum class RechargeDeglichTime : uint8_t
+    {
+        Milliseconds64,
+        Milliseconds256,
+        Milliseconds1024,
+        Milliseconds2048
+    };
+
+    enum class PrechargeSafetyTimer : uint8_t
+    {
+        Hours2,
+        Minutes30
+    };
+
+    enum class ThermalRegulation : uint8_t
+    {
+        DegC60,
+        DegC80,
+        DegC100,
+        DegC120
+    };
+
+    enum class ThermalShutdown : uint8_t
+    {
+        DegC150,
+        DegC130,
+        DegC120,
+        DegC85
+    };
+
     enum class ChargerStatus0Flags : uint8_t
     {
         VbusPresentStat = (1 << 0),
@@ -193,6 +245,14 @@ namespace PiSubmarine::Bq25792
         Disable = 3
     };
 
+    enum class VacOvp
+    {
+        Volts26,
+        Volts18,
+        Volts12,
+        Volts7
+    };
+
     enum class Watchdog
     {
         Disable = 0,
@@ -205,12 +265,56 @@ namespace PiSubmarine::Bq25792
         Sec160
     };
 
+    enum class Fault0
+    {
+        Vac1Ovp = 1 << 0,
+        Vac2Ovp = 1 << 1,
+        ConvOcp = 1 << 2,
+        IbatOcp = 1 << 3,
+        IbusOcp = 1 << 4,
+        VbatOvp = 1 << 5,
+        VbusOvp = 1 << 6,
+        IbatReg = 1 << 7,
+    };
+
+    enum class Fault1
+    {
+        TshutStat = 1 << 2,
+        OtgUvp = 1 << 4,
+        OtgOvp = 1 << 5,
+        VsysOvp = 1 << 6,
+        VsysShort = 1 << 7,
+    };
+
     enum class AdcSpeed
     {
         Resolution15bits = 0,
         Resolution14bits,
         Resolution13bits,
         Resolution12bits
+    };
+
+    enum class DpDac
+    {
+        HiZ,
+        Gnd,
+        V0v6,
+        V1v2,
+        V2v2,
+        V2v7,
+        V3v3,
+        DpDmShort
+    };
+
+    enum class DmDac
+    {
+        HiZ,
+        Gnd,
+        V0v6,
+        V1v2,
+        V2v2,
+        V2v7,
+        V3v3
     };
 
     class Device
@@ -221,7 +325,7 @@ namespace PiSubmarine::Bq25792
         explicit Device(I2C::Api::IDriver& driver);
 
         /// <summary>
-        /// Gets Minimal System Voltage (VSYSMIN) from Memory Buffer.
+        /// Gets Minimal System Voltage (VSYSMIN)
         /// </summary>
         /// <returns>VSYSMIN in mV.</returns>
         [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetMinimalSystemVoltage() const;
@@ -232,8 +336,23 @@ namespace PiSubmarine::Bq25792
         /// <param name="valueMv">Voltage in mV</param>
         [[nodiscard]] ProtocolError SetMinimalSystemVoltage(MilliVolts valueMv) const;
 
+
         /// <summary>
-        /// Gets maxium charge current.
+        /// Gets battery charge voltage limit.
+        /// </summary>
+        /// <returns>Charge voltage limit in mV</returns>
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetChargeVoltageLimit() const;
+
+
+        /// <summary>
+        /// Sets battery charge voltage limit.
+        /// </summary>
+        /// <param name="value">Charge voltage limit in mV. Range: 3000mV - 18800mV, bit step size: 10mV</param>
+        /// <returns></returns>
+        [[nodiscard]] ProtocolError SetChargeVoltageLimit(MilliVolts value) const;
+
+        /// <summary>
+        /// Gets maximum charge current.
         /// </summary>
         /// <returns>Current in mA</returns>
         [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetChargeCurrentLimit() const;
@@ -244,7 +363,69 @@ namespace PiSubmarine::Bq25792
         /// <param name="valueMa">Current in mA</param>
         [[nodiscard]] ProtocolError SetChargeCurrentLimit(MilliAmperes valueMa) const;
 
-        [[nodiscard]] ProtocolError SetTsIgnore(bool value);
+
+        /// <summary>
+        /// Gets DPM Input Voltage Limit. See 9.3.8.2.
+        /// </summary>
+        /// <returns>VINDPM in mV</returns>
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetDynamicPowerManagementInputVoltageLimit() const;
+
+
+        /// <summary>
+        /// Sets DPM Input Voltage Limit. See 9.3.8.2.
+        /// </summary>
+        /// <param name="valueMv">Value in mV. Range: 3600mV - 22000mV. Bit step size: 100mV.</param>
+        /// <returns>ProtocolError</returns>
+        [[nodiscard]] ProtocolError SetDynamicPowerManagementInputVoltageLimit(MilliVolts valueMv) const;
+
+        /// <summary>
+        /// Gets DPM Input Current Limit. See 9.3.8.2.
+        /// </summary>
+        /// <returns>IINDPM in mA</returns>
+        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetDynamicPowerManagementInputCurrentLimit() const;
+
+        /// <summary>
+        /// Sets DPM Input Current Limit. See 9.3.8.2.
+        /// </summary>
+        /// <param name="valueMa">Value in mA. Range: 100mA - 3300mA. Bit step size: 10mA.</param>
+        /// <returns>ProtocolError</returns>
+        [[nodiscard]] ProtocolError SetDynamicPowerManagementInputCurrentLimit(MilliAmperes valueMa) const;
+
+        [[nodiscard]] std::expected<PrechargeControl, ProtocolError> GetPrechargeControl() const;
+
+        [[nodiscard]] ProtocolError SetPrechargeControl(const PrechargeControl& value) const;
+
+        [[nodiscard]] ProtocolError Reset() const;
+
+        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetTerminationCurrent() const;
+
+        [[nodiscard]] ProtocolError SetTerminationCurrent(MilliAmperes valueMa) const;
+
+        [[nodiscard]] std::expected<Cells, ProtocolError> GetCells() const;
+        [[nodiscard]] ProtocolError SetCells(const Cells& value) const;
+
+        [[nodiscard]] std::expected<RechargeDeglichTime, ProtocolError> GetRechargeDeglichTime() const;
+        [[nodiscard]] ProtocolError SetCells(const RechargeDeglichTime& value) const;
+
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetRechargeThresholdOffset() const;
+        [[nodiscard]] ProtocolError SetRechargeThresholdOffset(MilliVolts valueMv) const;
+
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetOtgRegulationVoltage() const;
+        [[nodiscard]] ProtocolError SetOtgRegulationVoltage(MilliVolts valueMv) const;
+
+        [[nodiscard]] std::expected<PrechargeSafetyTimer, ProtocolError> GetPrechargeSafetyTimer() const;
+        [[nodiscard]] ProtocolError SetPrechargeSafetyTimer(PrechargeSafetyTimer value) const;
+
+        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetOtgCurrentLimit() const;
+        [[nodiscard]] ProtocolError SetOtgCurrentLimit(MilliAmperes valueMa) const;
+
+        [[nodiscard]] std::expected<ThermalRegulation, ProtocolError> GetThermalRegulationThreshold() const;
+        [[nodiscard]] ProtocolError SetThermalRegulationThreshold(const ThermalRegulation& value) const;
+
+        [[nodiscard]] std::expected<ThermalShutdown, ProtocolError> GetThermalShutdownThreshold() const;
+        [[nodiscard]] ProtocolError SetThermalShutdownThreshold(const ThermalShutdown& value) const;
+
+        [[nodiscard]] ProtocolError SetTsIgnore(bool value) const;
         [[nodiscard]] std::expected<bool, ProtocolError> GetTsIgnore() const;
 
         [[nodiscard]] std::expected<IbatReg, ProtocolError> GetOtgMaxCurrent() const;
@@ -268,6 +449,9 @@ namespace PiSubmarine::Bq25792
         [[nodiscard]] std::expected<Watchdog, ProtocolError> GetWatchdog() const;
         [[nodiscard]] ProtocolError SetWatchdog(Watchdog value) const;
 
+        [[nodiscard]] std::expected<VacOvp, ProtocolError> GetVacOvervoltageThreshold() const;
+        [[nodiscard]] ProtocolError SetVacOvervoltageThreshold(VacOvp value) const;
+
         [[nodiscard]] std::expected<AdcSpeed, ProtocolError> GetAdcSampleSpeed() const;
         [[nodiscard]] ProtocolError SetAdcSampleSpeed(AdcSpeed value) const;
 
@@ -283,6 +467,9 @@ namespace PiSubmarine::Bq25792
         [[nodiscard]] std::expected<bool, ProtocolError> IsDpDmDetectionOngoing() const;
         [[nodiscard]] std::expected<bool, ProtocolError> IsBatteryPresent() const;
 
+        [[nodiscard]] std::expected<Fault0, ProtocolError> GetFault0() const;
+        [[nodiscard]] std::expected<Fault1, ProtocolError> GetFault1() const;
+
         [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetIbusCurrent() const;
         [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetIbatCurrent() const;
         [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVbusVoltage() const;
@@ -295,6 +482,12 @@ namespace PiSubmarine::Bq25792
 
         [[nodiscard]] std::expected<bool, ProtocolError> IsAutomaticDpDmDetectionEnabled() const;
         [[nodiscard]] ProtocolError SetAutomaticDpDmDetectionEnabled(bool value) const;
+        [[nodiscard]] ProtocolError ForceDpDmDetection() const;
+
+        [[nodiscard]] std::expected<DpDac, ProtocolError> GetDpDac() const;
+        [[nodiscard]] ProtocolError SetDpDac(DpDac value) const;
+        [[nodiscard]] std::expected<DmDac, ProtocolError> GetDmDac() const;
+        [[nodiscard]] ProtocolError StDmDac(DmDac value) const;
 
     private:
         constexpr static size_t MemorySize = 0x49;
@@ -345,6 +538,41 @@ namespace PiSubmarine::Bq25792
             }
             RegUtils::WriteInt<T, std::endian::big>(value, regBytes.data(), Start, Num);
             return Write(Reg, regBytes.data(), regBytes.size());
+        }
+
+        template <RegOffset Reg, typename T>
+        auto ReadFieldEnum(size_t start, size_t num) const -> std::expected<T, ProtocolError>
+        {
+            auto field = ReadField<Reg>(start, num);
+            if (!field.has_value())
+            {
+                return std::unexpected(field.error());
+            }
+            return static_cast<T>(field.value());
+        }
+
+        template <RegOffset Reg, typename T>
+        ProtocolError WriteFieldEnum(T value, size_t start, size_t num) const
+        {
+            return WriteField<Reg>(static_cast<std::underlying_type_t<T>>(value), start, num);
+        }
+
+        template <RegOffset Reg, typename T>
+        auto ReadFieldUnit(size_t start, size_t num, T offset, T bitStep) const -> std::expected<T, ProtocolError>
+        {
+            auto unit = ReadField<Reg>(start, num);
+            if (!unit.has_value())
+            {
+                return std::unexpected(unit.error());
+            }
+            return T(unit.value()) * bitStep + offset;
+        }
+
+        template <RegOffset Reg, typename T>
+        ProtocolError WriteFieldUnit(size_t start, size_t num, T value, T offset, T bitStep) const
+        {
+            auto valueReg = (value.Value - offset.Value) / bitStep.Value;
+            return WriteField<Reg>(valueReg, start, num);
         }
     };
 }
