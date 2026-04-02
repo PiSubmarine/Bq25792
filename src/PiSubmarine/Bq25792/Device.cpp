@@ -4,9 +4,8 @@
 
 namespace PiSubmarine::Bq25792
 {
-    Device::Device(PiSubmarine::I2C::Api::IDriver& driver): m_Driver(driver)
+    Device::Device(PiSubmarine::I2C::Api::IDriver& driver) : m_Driver(driver)
     {
-
     }
 
     std::expected<MilliVolts, ProtocolError> Device::GetMinimalSystemVoltage() const
@@ -25,20 +24,25 @@ namespace PiSubmarine::Bq25792
         return WriteField<RegOffset::MinimalSystemVoltage>(value, 0, 6);
     }
 
-    /*
 
     std::expected<MilliAmperes, ProtocolError> Device::GetChargeCurrentLimit() const
     {
-        auto Ichg = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
-        return MilliAmperes(Ichg) * 10_mA;
+        auto current = ReadField<RegOffset::ChargeCurrentLimit>(0, 9);
+        if (!current.has_value())
+        {
+            return std::unexpected(current.error());
+        }
+        return MilliAmperes(current.value()) * 10_mA;
     }
 
-    void Device::SetChargeCurrentLimit(MilliAmperes valueMa)
+
+    ProtocolError Device::SetChargeCurrentLimit(MilliAmperes valueMa) const
     {
         uint16_t value = valueMa.Value / 10;
-        RegUtils::Write<uint16_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargeCurrentLimit), 0, 9);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargeCurrentLimit)] = true;
+        return WriteField<RegOffset::ChargeCurrentLimit>(value, 0, 9);
     }
+
+    /*
 
     IbatReg Device::GetOtgMaxCurrent() const
     {

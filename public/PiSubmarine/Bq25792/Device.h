@@ -231,7 +231,7 @@ namespace PiSubmarine::Bq25792
         /// <param name="valueMv">Voltage in mV</param>
         ProtocolError SetMinimalSystemVoltage(MilliVolts valueMv) const;
 
-        /*
+
         /// <summary>
         /// Gets maxium charge current.
         /// </summary>
@@ -242,8 +242,9 @@ namespace PiSubmarine::Bq25792
         /// Sets maximum charge current. Range: 50mA - 5000mA, bit step size: 10mA.
         /// </summary>
         /// <param name="valueMa">Current in mA</param>
-        void SetChargeCurrentLimit(MilliAmperes valueMa);
+        ProtocolError SetChargeCurrentLimit(MilliAmperes valueMa) const;
 
+        /*
         [[nodiscard]] IbatReg GetOtgMaxCurrent() const;
 
         void SetOtgMaxCurrent(IbatReg value);
