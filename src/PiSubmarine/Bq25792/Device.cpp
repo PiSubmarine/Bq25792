@@ -42,6 +42,17 @@ namespace PiSubmarine::Bq25792
         return WriteField<RegOffset::ChargeCurrentLimit>(value, 0, 9);
     }
 
+    ProtocolError Device::SetTsIgnore(bool value)
+    {
+        uint8_t value8 = value ? 1 : 0;
+        return WriteField<RegOffset::NtcControl1>(value8, 0, 1);
+    }
+
+    std::expected<bool, ProtocolError> Device::GetTsIgnore() const
+    {
+        return ReadField<RegOffset::NtcControl1>(0, 1);
+    }
+
     /*
 
     IbatReg Device::GetOtgMaxCurrent() const
@@ -97,17 +108,6 @@ namespace PiSubmarine::Bq25792
     {
         RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
         m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
-    }
-
-    void Device::SetTsIgnore(bool value)
-    {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::NtcControl1)] = true;
-    }
-
-    bool Device::GetTsIgnore() const
-    {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::NtcControl1), 0, 1);
     }
 
     void Device::SetWdRst(bool value)

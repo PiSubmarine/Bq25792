@@ -244,6 +244,10 @@ namespace PiSubmarine::Bq25792
         /// <param name="valueMa">Current in mA</param>
         ProtocolError SetChargeCurrentLimit(MilliAmperes valueMa) const;
 
+        ProtocolError SetTsIgnore(bool value);
+
+        [[nodiscard]] std::expected<bool, ProtocolError> GetTsIgnore() const;
+
         /*
         [[nodiscard]] IbatReg GetOtgMaxCurrent() const;
 
@@ -264,10 +268,6 @@ namespace PiSubmarine::Bq25792
         [[nodiscard]] bool IsDischargeOcpEnabled() const;
 
         void SetDischargeOcpEnabled(bool value);
-
-        void SetTsIgnore(bool value);
-
-        [[nodiscard]] bool GetTsIgnore() const;
 
         void SetWdRst(bool value);
 
