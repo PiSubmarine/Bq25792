@@ -3,6 +3,7 @@
 #include <functional>
 #include <chrono>
 #include <expected>
+#include <array>
 #include "PiSubmarine/RegUtils.h"
 #include "PiSubmarine/Bq25792/Units.h"
 #include "PiSubmarine/NormalizedIntFraction.h"
@@ -229,8 +230,7 @@ namespace PiSubmarine::Bq25792
         /// Sets minimal system voltage. Range: 2500mV - 16000mV, bit step size: 250mV
         /// </summary>
         /// <param name="valueMv">Voltage in mV</param>
-        ProtocolError SetMinimalSystemVoltage(MilliVolts valueMv) const;
-
+        [[nodiscard]] ProtocolError SetMinimalSystemVoltage(MilliVolts valueMv) const;
 
         /// <summary>
         /// Gets maxium charge current.
@@ -242,88 +242,60 @@ namespace PiSubmarine::Bq25792
         /// Sets maximum charge current. Range: 50mA - 5000mA, bit step size: 10mA.
         /// </summary>
         /// <param name="valueMa">Current in mA</param>
-        ProtocolError SetChargeCurrentLimit(MilliAmperes valueMa) const;
+        [[nodiscard]] ProtocolError SetChargeCurrentLimit(MilliAmperes valueMa) const;
 
-        ProtocolError SetTsIgnore(bool value);
-
+        [[nodiscard]] ProtocolError SetTsIgnore(bool value);
         [[nodiscard]] std::expected<bool, ProtocolError> GetTsIgnore() const;
 
-        /*
-        [[nodiscard]] IbatReg GetOtgMaxCurrent() const;
+        [[nodiscard]] std::expected<IbatReg, ProtocolError> GetOtgMaxCurrent() const;
+        [[nodiscard]] ProtocolError SetOtgMaxCurrent(IbatReg value) const;
 
-        void SetOtgMaxCurrent(IbatReg value);
+        [[nodiscard]] std::expected<bool, ProtocolError> IsSfetPresent() const;
+        [[nodiscard]] ProtocolError SetSfetPresent(bool value) const;
 
-        [[nodiscard]] bool IsSfetPresent() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsDischargeCurrentSensingEnabled() const;
+        [[nodiscard]] ProtocolError SetDischargeCurrentSensingEnabled(bool value) const;
 
-        void SetSfetPresent(bool value);
+        [[nodiscard]] std::expected<bool, ProtocolError> IsIlimHizCurrentLimitEnabled() const;
+        [[nodiscard]] ProtocolError SetIlimHizCurrentLimitEnabled(bool value) const;
 
-        [[nodiscard]] bool IsDischargeCurrentSensingEnabled() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsDischargeOcpEnabled() const;
+        [[nodiscard]] ProtocolError SetDischargeOcpEnabled(bool value) const;
 
-        void SetDischargeCurrentSensingEnabled(bool value);
+        [[nodiscard]] std::expected<bool, ProtocolError> GetWdRst() const;
+        [[nodiscard]] ProtocolError SetWdRst(bool value) const;
 
-        [[nodiscard]] bool IsIlimHizCurrentLimitEnabled() const;
+        [[nodiscard]] std::expected<Watchdog, ProtocolError> GetWatchdog() const;
+        [[nodiscard]] ProtocolError SetWatchdog(Watchdog value) const;
 
-        void SetIlimHizCurrentLimitEnabled(bool value);
+        [[nodiscard]] std::expected<AdcSpeed, ProtocolError> GetAdcSampleSpeed() const;
+        [[nodiscard]] ProtocolError SetAdcSampleSpeed(AdcSpeed value) const;
 
-        [[nodiscard]] bool IsDischargeOcpEnabled() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsAdcEnabled() const;
+        [[nodiscard]] ProtocolError SetAdcEnabled(bool value) const;
 
-        void SetDischargeOcpEnabled(bool value);
+        [[nodiscard]] std::expected<ChargerStatus0Flags, ProtocolError> GetChargerStatus0() const;
+        [[nodiscard]] std::expected<ChargeStatus, ProtocolError> GetChargeStatus() const;
+        [[nodiscard]] std::expected<VbusStatus, ProtocolError> GetVbusStatus() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsBc12DetectionComplete() const;
+        [[nodiscard]] std::expected<IcoStatus, ProtocolError> GetIcoStatus() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsInThermalRegulation() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsDpDmDetectionOngoing() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsBatteryPresent() const;
 
-        void SetWdRst(bool value);
+        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetIbusCurrent() const;
+        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetIbatCurrent() const;
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVbusVoltage() const;
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVbatVoltage() const;
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVsysVoltage() const;
+        [[nodiscard]] std::expected<NormalizedIntFraction<16>, ProtocolError> GetTsPercentage() const;
+        [[nodiscard]] std::expected<Celcius, ProtocolError> GetDieTemperature() const;
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetUsbDataPlusVoltage() const;
+        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetUsbDataMinusVoltage() const;
 
-        [[nodiscard]] bool GetWdRst() const;
+        [[nodiscard]] std::expected<bool, ProtocolError> IsAutomaticDpDmDetectionEnabled() const;
+        [[nodiscard]] ProtocolError SetAutomaticDpDmDetectionEnabled(bool value) const;
 
-        void SetWatchdog(Watchdog value);
-
-        [[nodiscard]] Watchdog GetWatchdog() const;
-
-        [[nodiscard]] AdcSpeed GetAdcSampleSpeed() const;
-
-        void SetAdcSampleSpeed(AdcSpeed value);
-
-        [[nodiscard]] bool IsAdcEnabled() const;
-
-        void SetAdcEnabled(bool value);
-
-        [[nodiscard]] ChargerStatus0Flags GetChargerStatus0() const;
-
-        [[nodiscard]] ChargeStatus GetChargeStatus() const;
-
-        [[nodiscard]] VbusStatus GetVbusStatus() const;
-
-        [[nodiscard]] bool IsBc12DetectionComplete() const;
-
-        [[nodiscard]] IcoStatus GetIcoStatus() const;
-
-        [[nodiscard]] bool IsInThermalRegulation() const;
-
-        [[nodiscard]] bool IsDpDmDetectionOngoing() const;
-
-        [[nodiscard]] bool IsBatteryPresent() const;
-
-        [[nodiscard]] MilliAmperes GetIbusCurrent() const;
-
-        [[nodiscard]] MilliAmperes GetIbatCurrent() const;
-
-        [[nodiscard]] MilliVolts GetVbusVoltage() const;
-
-        [[nodiscard]] MilliVolts GetVbatVoltage() const;
-
-        [[nodiscard]] MilliVolts GetVsysVoltage() const;
-
-        [[nodiscard]] NormalizedIntFraction<16> GetTsPercentage() const;
-
-        [[nodiscard]] Celcius GetDieTemperature() const;
-
-        [[nodiscard]] MilliVolts GetUsbDataPlusVoltage() const;
-
-        [[nodiscard]] MilliVolts GetUsbDataMinusVoltage() const;
-
-        [[nodiscard]] bool IsAutomaticDpDmDetectionEnabled() const;
-
-        void SetAutomaticDpDmDetectionEnabled(bool value);
-
-    */
     private:
         constexpr static size_t MemorySize = 0x49;
 
@@ -349,7 +321,6 @@ namespace PiSubmarine::Bq25792
         auto ReadField(size_t Start, size_t Num) const
             -> std::expected<RegisterType_t<GetRegisterSize(Reg)>, ProtocolError>
         {
-            // Define the return type locally for cleaner code
             using ReturnType = RegisterType_t<GetRegisterSize(Reg)>;
 
             std::array<uint8_t, GetRegisterSize(Reg)> regBytes;
@@ -360,7 +331,6 @@ namespace PiSubmarine::Bq25792
                 return std::unexpected(error);
             }
 
-            // Pass the deduced ReturnType to your utility
             return RegUtils::ReadInt<ReturnType, std::endian::big>(regBytes.data(), Start, Num);
         }
 

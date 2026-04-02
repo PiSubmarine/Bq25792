@@ -1,4 +1,6 @@
 #include <utility>
+#include <vector>
+#include <cstring>
 
 #include "PiSubmarine/Bq25792/Device.h"
 
@@ -24,7 +26,6 @@ namespace PiSubmarine::Bq25792
         return WriteField<RegOffset::MinimalSystemVoltage>(value, 0, 6);
     }
 
-
     std::expected<MilliAmperes, ProtocolError> Device::GetChargeCurrentLimit() const
     {
         auto current = ReadField<RegOffset::ChargeCurrentLimit>(0, 9);
@@ -34,7 +35,6 @@ namespace PiSubmarine::Bq25792
         }
         return MilliAmperes(current.value()) * 10_mA;
     }
-
 
     ProtocolError Device::SetChargeCurrentLimit(MilliAmperes valueMa) const
     {
@@ -50,216 +50,249 @@ namespace PiSubmarine::Bq25792
 
     std::expected<bool, ProtocolError> Device::GetTsIgnore() const
     {
-        return ReadField<RegOffset::NtcControl1>(0, 1);
+        auto field = ReadField<RegOffset::NtcControl1>(0, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    /*
-
-    IbatReg Device::GetOtgMaxCurrent() const
+    std::expected<IbatReg, ProtocolError> Device::GetOtgMaxCurrent() const
     {
-        return RegUtils::Read<IbatReg, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 3, 2);
+        auto field = ReadField<RegOffset::ChargerControl5>(3, 2);
+        if (field.has_value()) return static_cast<IbatReg>(field.value());
+        return std::unexpected(field.error());
     }
 
-    void Device::SetOtgMaxCurrent(IbatReg value)
+    ProtocolError Device::SetOtgMaxCurrent(IbatReg value) const
     {
-        RegUtils::Write<IbatReg, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+        return WriteField<RegOffset::ChargerControl5>(static_cast<uint8_t>(value), 3, 2);
     }
 
-    bool Device::IsSfetPresent() const
+    std::expected<bool, ProtocolError> Device::IsSfetPresent() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 7, 1);
+        auto field = ReadField<RegOffset::ChargerControl5>(7, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    void Device::SetSfetPresent(bool value)
+    ProtocolError Device::SetSfetPresent(bool value) const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 7, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+        return WriteField<RegOffset::ChargerControl5>(value ? 1 : 0, 7, 1);
     }
 
-    bool Device::IsDischargeCurrentSensingEnabled() const
+    std::expected<bool, ProtocolError> Device::IsDischargeCurrentSensingEnabled() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 5, 1);
+        auto field = ReadField<RegOffset::ChargerControl5>(5, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    void Device::SetDischargeCurrentSensingEnabled(bool value)
+    ProtocolError Device::SetDischargeCurrentSensingEnabled(bool value) const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 5, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+        return WriteField<RegOffset::ChargerControl5>(value ? 1 : 0, 5, 1);
     }
 
-    bool Device::IsIlimHizCurrentLimitEnabled() const
+    std::expected<bool, ProtocolError> Device::IsIlimHizCurrentLimitEnabled() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 1, 1);
+        auto field = ReadField<RegOffset::ChargerControl5>(1, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    void Device::SetIlimHizCurrentLimitEnabled(bool value)
+    ProtocolError Device::SetIlimHizCurrentLimitEnabled(bool value) const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 1, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+        return WriteField<RegOffset::ChargerControl5>(value ? 1 : 0, 1, 1);
     }
 
-    bool Device::IsDischargeOcpEnabled() const
+    std::expected<bool, ProtocolError> Device::IsDischargeOcpEnabled() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
+        auto field = ReadField<RegOffset::ChargerControl5>(0, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    void Device::SetDischargeOcpEnabled(bool value)
+    ProtocolError Device::SetDischargeOcpEnabled(bool value) const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl5), 0, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl5)] = true;
+        return WriteField<RegOffset::ChargerControl5>(value ? 1 : 0, 0, 1);
     }
 
-    void Device::SetWdRst(bool value)
+    std::expected<bool, ProtocolError> Device::GetWdRst() const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
+        auto field = ReadField<RegOffset::ChargerControl1>(3, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    bool Device::GetWdRst() const
+    ProtocolError Device::SetWdRst(bool value) const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
+        return WriteField<RegOffset::ChargerControl1>(value ? 1 : 0, 3, 1);
     }
 
-    void Device::SetWatchdog(Watchdog value)
+    std::expected<Watchdog, ProtocolError> Device::GetWatchdog() const
     {
-        RegUtils::Write<Watchdog, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 3, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
+        auto field = ReadField<RegOffset::ChargerControl1>(0, 3);
+        if (field.has_value()) return static_cast<Watchdog>(field.value());
+        return std::unexpected(field.error());
     }
 
-    Watchdog Device::GetWatchdog() const
+    ProtocolError Device::SetWatchdog(Watchdog value) const
     {
-        return RegUtils::Read<Watchdog, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl1), 0, 3);
+        return WriteField<RegOffset::ChargerControl1>(static_cast<uint8_t>(value), 0, 3);
     }
 
-    AdcSpeed Device::GetAdcSampleSpeed() const
+    std::expected<AdcSpeed, ProtocolError> Device::GetAdcSampleSpeed() const
     {
-        return RegUtils::Read<AdcSpeed, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 4, 2);
+        auto field = ReadField<RegOffset::AdcControl>(4, 2);
+        if (field.has_value()) return static_cast<AdcSpeed>(field.value());
+        return std::unexpected(field.error());
     }
 
-    void Device::SetAdcSampleSpeed(AdcSpeed value)
+    ProtocolError Device::SetAdcSampleSpeed(AdcSpeed value) const
     {
-        RegUtils::Write<AdcSpeed, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 4, 2);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl1)] = true;
+        return WriteField<RegOffset::AdcControl>(static_cast<uint8_t>(value), 4, 2);
     }
 
-    bool Device::IsAdcEnabled() const
+    std::expected<bool, ProtocolError> Device::IsAdcEnabled() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
+        auto field = ReadField<RegOffset::AdcControl>(7, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    void Device::SetAdcEnabled(bool value)
+    ProtocolError Device::SetAdcEnabled(bool value) const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::AdcControl), 7, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::AdcControl)] = true;
+        return WriteField<RegOffset::AdcControl>(value ? 1 : 0, 7, 1);
     }
 
-    ChargerStatus0Flags Device::GetChargerStatus0() const
+    std::expected<ChargerStatus0Flags, ProtocolError> Device::GetChargerStatus0() const
     {
-        return RegUtils::Read<ChargerStatus0Flags, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus0), 0, 8);
+        auto field = ReadField<RegOffset::ChargerStatus0>(0, 8);
+        if (field.has_value()) return static_cast<ChargerStatus0Flags>(field.value());
+        return std::unexpected(field.error());
     }
 
-    ChargeStatus Device::GetChargeStatus() const
+    std::expected<ChargeStatus, ProtocolError> Device::GetChargeStatus() const
     {
-        return RegUtils::Read<ChargeStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 5, 3);
+        auto field = ReadField<RegOffset::ChargerStatus1>(5, 3);
+        if (field.has_value()) return static_cast<ChargeStatus>(field.value());
+        return std::unexpected(field.error());
     }
 
-    VbusStatus Device::GetVbusStatus() const
+    std::expected<VbusStatus, ProtocolError> Device::GetVbusStatus() const
     {
-        return RegUtils::Read<VbusStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 1, 4);
+        auto field = ReadField<RegOffset::ChargerStatus1>(1, 4);
+        if (field.has_value()) return static_cast<VbusStatus>(field.value());
+        return std::unexpected(field.error());
     }
 
-    bool Device::IsBc12DetectionComplete() const
+    std::expected<bool, ProtocolError> Device::IsBc12DetectionComplete() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus1), 0, 1);
+        auto field = ReadField<RegOffset::ChargerStatus1>(0, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    IcoStatus Device::GetIcoStatus() const
+    std::expected<IcoStatus, ProtocolError> Device::GetIcoStatus() const
     {
-        return RegUtils::Read<IcoStatus, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 6, 2);
+        auto field = ReadField<RegOffset::ChargerStatus2>(6, 2);
+        if (field.has_value()) return static_cast<IcoStatus>(field.value());
+        return std::unexpected(field.error());
     }
 
-    bool Device::IsInThermalRegulation() const
+    std::expected<bool, ProtocolError> Device::IsInThermalRegulation() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 2, 1);
+        auto field = ReadField<RegOffset::ChargerStatus2>(2, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    bool Device::IsDpDmDetectionOngoing() const
+    std::expected<bool, ProtocolError> Device::IsDpDmDetectionOngoing() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 1, 1);
+        auto field = ReadField<RegOffset::ChargerStatus2>(1, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    bool Device::IsBatteryPresent() const
+    std::expected<bool, ProtocolError> Device::IsBatteryPresent() const
     {
-        return RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerStatus2), 0, 1);
+        auto field = ReadField<RegOffset::ChargerStatus2>(0, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    MilliAmperes Device::GetIbusCurrent() const
+    std::expected<MilliAmperes, ProtocolError> Device::GetIbusCurrent() const
     {
-        auto isubAdc = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbusAdc), 0, 16);
-        return MilliAmperes(isubAdc);
+        auto field = ReadField<RegOffset::IbusAdc>(0, 16);
+        if (field.has_value()) return MilliAmperes(static_cast<int16_t>(field.value()));
+        return std::unexpected(field.error());
     }
 
-    MilliAmperes Device::GetIbatCurrent() const
+    std::expected<MilliAmperes, ProtocolError> Device::GetIbatCurrent() const
     {
-        auto value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::IbatAdc), 0, 16);
-        return MilliAmperes(value);
+        auto field = ReadField<RegOffset::IbatAdc>(0, 16);
+        if (field.has_value()) return MilliAmperes(static_cast<int16_t>(field.value()));
+        return std::unexpected(field.error());
     }
 
-    MilliVolts Device::GetVbusVoltage() const
+    std::expected<MilliVolts, ProtocolError> Device::GetVbusVoltage() const
     {
-        auto value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VbusAdc), 0, 16);
-        return MilliVolts(value);
+        auto field = ReadField<RegOffset::VbusAdc>(0, 16);
+        if (field.has_value()) return MilliVolts(field.value());
+        return std::unexpected(field.error());
     }
 
-    MilliVolts Device::GetVbatVoltage() const
+    std::expected<MilliVolts, ProtocolError> Device::GetVbatVoltage() const
     {
-        auto value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VbatAdc), 0, 16);
-        return MilliVolts(value);
+        auto field = ReadField<RegOffset::VbatAdc>(0, 16);
+        if (field.has_value()) return MilliVolts(field.value());
+        return std::unexpected(field.error());
     }
 
-    MilliVolts Device::GetVsysVoltage() const
+    std::expected<MilliVolts, ProtocolError> Device::GetVsysVoltage() const
     {
-        auto value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::VsysAdc), 0, 16);
-        return MilliVolts(value);
+        auto field = ReadField<RegOffset::VsysAdc>(0, 16);
+        if (field.has_value()) return MilliVolts(field.value());
+        return std::unexpected(field.error());
     }
 
-    NormalizedIntFraction<16> Device::GetTsPercentage() const
+    std::expected<NormalizedIntFraction<16>, ProtocolError> Device::GetTsPercentage() const
     {
-        auto value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TsAdc), 0, 16);
-        return NormalizedIntFraction<16>(value);
+        auto field = ReadField<RegOffset::TsAdc>(0, 16);
+        if (field.has_value()) return NormalizedIntFraction<16>(field.value());
+        return std::unexpected(field.error());
     }
 
-    Celcius Device::GetDieTemperature() const
+    std::expected<Celcius, ProtocolError> Device::GetDieTemperature() const
     {
-        auto value = RegUtils::Read<int16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::TdieAdc), 0, 16);
-        return Celcius(value);
+        auto field = ReadField<RegOffset::TdieAdc>(0, 16);
+        if (field.has_value()) return Celcius(static_cast<int16_t>(field.value()));
+        return std::unexpected(field.error());
     }
 
-    MilliVolts Device::GetUsbDataPlusVoltage() const
+    std::expected<MilliVolts, ProtocolError> Device::GetUsbDataPlusVoltage() const
     {
-        auto value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::DpAdc), 0, 16);
-        return MilliVolts(value);
+        auto field = ReadField<RegOffset::DpAdc>(0, 16);
+        if (field.has_value()) return MilliVolts(field.value());
+        return std::unexpected(field.error());
     }
 
-    MilliVolts Device::GetUsbDataMinusVoltage() const
+    std::expected<MilliVolts, ProtocolError> Device::GetUsbDataMinusVoltage() const
     {
-        auto value = RegUtils::Read<uint16_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::DmAdc), 0, 16);
-        return MilliVolts(value);
+        auto field = ReadField<RegOffset::DmAdc>(0, 16);
+        if (field.has_value()) return MilliVolts(field.value());
+        return std::unexpected(field.error());
     }
 
-    bool Device::IsAutomaticDpDmDetectionEnabled() const
+    std::expected<bool, ProtocolError> Device::IsAutomaticDpDmDetectionEnabled() const
     {
-        auto value = RegUtils::Read<uint8_t, std::endian::big>(m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
-        return value;
+        auto field = ReadField<RegOffset::ChargerControl2>(6, 1);
+        if (field.has_value()) return field.value() != 0;
+        return std::unexpected(field.error());
     }
 
-    void Device::SetAutomaticDpDmDetectionEnabled(bool value)
+    ProtocolError Device::SetAutomaticDpDmDetectionEnabled(bool value) const
     {
-        RegUtils::Write<uint8_t, std::endian::big>(value, m_ChargerMemoryBuffer.data() + RegUtils::ToInt(RegOffset::ChargerControl2), 6, 1);
-        m_DirtyRegs[RegUtils::ToInt(RegOffset::ChargerControl2)] = true;
+        return WriteField<RegOffset::ChargerControl2>(value ? 1 : 0, 6, 1);
     }
-*/
 
     ProtocolError Device::Read(uint8_t offset, uint8_t* data, size_t size) const
     {
@@ -276,7 +309,7 @@ namespace PiSubmarine::Bq25792
         std::vector<uint8_t> buffer;
         buffer.resize(size + 1);
         buffer[0] = offset;
-        memcpy(buffer.data() + 1, data, size);
+        std::memcpy(buffer.data() + 1, data, size);
 
         return m_Driver.Write(Address, buffer.data(), buffer.size()) ? ProtocolError::Ok : ProtocolError::WriteError;
     }
