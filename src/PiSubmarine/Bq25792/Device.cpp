@@ -463,8 +463,15 @@ namespace PiSubmarine::Bq25792
     std::expected<Celcius, ProtocolError> Device::GetDieTemperature() const
     {
         auto field = ReadField<RegOffset::TdieAdc>(0, 16);
-        if (field.has_value()) return Celcius(static_cast<int16_t>(field.value()));
-        return std::unexpected(field.error());
+
+        if (!field.has_value())
+        {
+            return std::unexpected(field.error());
+        }
+
+        auto rawHalves = static_cast<int16_t>(field.value());
+
+        return Celcius(rawHalves);
     }
 
     std::expected<MilliVolts, ProtocolError> Device::GetUsbDataPlusVoltage() const
