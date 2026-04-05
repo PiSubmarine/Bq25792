@@ -94,6 +94,7 @@ namespace PiSubmarine::Bq25792
         (1ULL << static_cast<uint8_t>(RegOffset::VbusAdc)) |
         (1ULL << static_cast<uint8_t>(RegOffset::Vac1Adc)) |
         (1ULL << static_cast<uint8_t>(RegOffset::Vac2Adc)) |
+        (1ULL << static_cast<uint8_t>(RegOffset::VbatAdc)) |
         (1ULL << static_cast<uint8_t>(RegOffset::VsysAdc)) |
         (1ULL << static_cast<uint8_t>(RegOffset::TsAdc));
 
