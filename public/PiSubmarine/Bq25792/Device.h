@@ -12,8 +12,6 @@
 namespace PiSubmarine::Bq25792
 {
     using WaitFunc = std::function<void(std::chrono::milliseconds)>;
-    template <typename T>
-    using Result = PiSubmarine::Error::Api::Result<T>;
 
     enum class RegOffset : uint8_t
     {
@@ -324,20 +322,20 @@ namespace PiSubmarine::Bq25792
         /// Gets Minimal System Voltage (VSYSMIN)
         /// </summary>
         /// <returns>VSYSMIN in mV.</returns>
-        [[nodiscard]] Result<MilliVolts> GetMinimalSystemVoltage() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetMinimalSystemVoltage() const;
 
         /// <summary>
         /// Sets minimal system voltage. Range: 2500mV - 16000mV, bit step size: 250mV
         /// </summary>
         /// <param name="valueMv">Voltage in mV</param>
-        [[nodiscard]] Result<void> SetMinimalSystemVoltage(MilliVolts valueMv) const;
+        [[nodiscard]] Error::Api::Result<void> SetMinimalSystemVoltage(MilliVolts valueMv) const;
 
 
         /// <summary>
         /// Gets battery charge voltage limit.
         /// </summary>
         /// <returns>Charge voltage limit in mV</returns>
-        [[nodiscard]] Result<MilliVolts> GetChargeVoltageLimit() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetChargeVoltageLimit() const;
 
 
         /// <summary>
@@ -345,26 +343,26 @@ namespace PiSubmarine::Bq25792
         /// </summary>
         /// <param name="value">Charge voltage limit in mV. Range: 3000mV - 18800mV, bit step size: 10mV</param>
         /// <returns></returns>
-        [[nodiscard]] Result<void> SetChargeVoltageLimit(MilliVolts value) const;
+        [[nodiscard]] Error::Api::Result<void> SetChargeVoltageLimit(MilliVolts value) const;
 
         /// <summary>
         /// Gets maximum charge current.
         /// </summary>
         /// <returns>Current in mA</returns>
-        [[nodiscard]] Result<MilliAmperes> GetChargeCurrentLimit() const;
+        [[nodiscard]] Error::Api::Result<MilliAmperes> GetChargeCurrentLimit() const;
 
         /// <summary>
         /// Sets maximum charge current. Range: 50mA - 5000mA, bit step size: 10mA.
         /// </summary>
         /// <param name="valueMa">Current in mA</param>
-        [[nodiscard]] Result<void> SetChargeCurrentLimit(MilliAmperes valueMa) const;
+        [[nodiscard]] Error::Api::Result<void> SetChargeCurrentLimit(MilliAmperes valueMa) const;
 
 
         /// <summary>
         /// Gets DPM Input Voltage Limit. See 9.3.8.2.
         /// </summary>
         /// <returns>VINDPM in mV</returns>
-        [[nodiscard]] Result<MilliVolts> GetDynamicPowerManagementInputVoltageLimit() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetDynamicPowerManagementInputVoltageLimit() const;
 
 
         /// <summary>
@@ -372,118 +370,118 @@ namespace PiSubmarine::Bq25792
         /// </summary>
         /// <param name="valueMv">Value in mV. Range: 3600mV - 22000mV. Bit step size: 100mV.</param>
         /// <returns>Operation result.</returns>
-        [[nodiscard]] Result<void> SetDynamicPowerManagementInputVoltageLimit(MilliVolts valueMv) const;
+        [[nodiscard]] Error::Api::Result<void> SetDynamicPowerManagementInputVoltageLimit(MilliVolts valueMv) const;
 
         /// <summary>
         /// Gets DPM Input Current Limit. See 9.3.8.2.
         /// </summary>
         /// <returns>IINDPM in mA</returns>
-        [[nodiscard]] Result<MilliAmperes> GetDynamicPowerManagementInputCurrentLimit() const;
+        [[nodiscard]] Error::Api::Result<MilliAmperes> GetDynamicPowerManagementInputCurrentLimit() const;
 
         /// <summary>
         /// Sets DPM Input Current Limit. See 9.3.8.2.
         /// </summary>
         /// <param name="valueMa">Value in mA. Range: 100mA - 3300mA. Bit step size: 10mA.</param>
         /// <returns>Operation result.</returns>
-        [[nodiscard]] Result<void> SetDynamicPowerManagementInputCurrentLimit(MilliAmperes valueMa) const;
+        [[nodiscard]] Error::Api::Result<void> SetDynamicPowerManagementInputCurrentLimit(MilliAmperes valueMa) const;
 
-        [[nodiscard]] Result<PrechargeControl> GetPrechargeControl() const;
+        [[nodiscard]] Error::Api::Result<PrechargeControl> GetPrechargeControl() const;
 
-        [[nodiscard]] Result<void> SetPrechargeControl(const PrechargeControl& value) const;
+        [[nodiscard]] Error::Api::Result<void> SetPrechargeControl(const PrechargeControl& value) const;
 
-        [[nodiscard]] Result<void> Reset() const;
+        [[nodiscard]] Error::Api::Result<void> Reset() const;
 
-        [[nodiscard]] Result<MilliAmperes> GetTerminationCurrent() const;
+        [[nodiscard]] Error::Api::Result<MilliAmperes> GetTerminationCurrent() const;
 
-        [[nodiscard]] Result<void> SetTerminationCurrent(MilliAmperes valueMa) const;
+        [[nodiscard]] Error::Api::Result<void> SetTerminationCurrent(MilliAmperes valueMa) const;
 
-        [[nodiscard]] Result<Cells> GetCells() const;
-        [[nodiscard]] Result<void> SetCells(const Cells& value) const;
+        [[nodiscard]] Error::Api::Result<Cells> GetCells() const;
+        [[nodiscard]] Error::Api::Result<void> SetCells(const Cells& value) const;
 
-        [[nodiscard]] Result<RechargeDeglichTime> GetRechargeDeglichTime() const;
-        [[nodiscard]] Result<void> SetCells(const RechargeDeglichTime& value) const;
+        [[nodiscard]] Error::Api::Result<RechargeDeglichTime> GetRechargeDeglichTime() const;
+        [[nodiscard]] Error::Api::Result<void> SetCells(const RechargeDeglichTime& value) const;
 
-        [[nodiscard]] Result<MilliVolts> GetRechargeThresholdOffset() const;
-        [[nodiscard]] Result<void> SetRechargeThresholdOffset(MilliVolts valueMv) const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetRechargeThresholdOffset() const;
+        [[nodiscard]] Error::Api::Result<void> SetRechargeThresholdOffset(MilliVolts valueMv) const;
 
-        [[nodiscard]] Result<MilliVolts> GetOtgRegulationVoltage() const;
-        [[nodiscard]] Result<void> SetOtgRegulationVoltage(MilliVolts valueMv) const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetOtgRegulationVoltage() const;
+        [[nodiscard]] Error::Api::Result<void> SetOtgRegulationVoltage(MilliVolts valueMv) const;
 
-        [[nodiscard]] Result<PrechargeSafetyTimer> GetPrechargeSafetyTimer() const;
-        [[nodiscard]] Result<void> SetPrechargeSafetyTimer(PrechargeSafetyTimer value) const;
+        [[nodiscard]] Error::Api::Result<PrechargeSafetyTimer> GetPrechargeSafetyTimer() const;
+        [[nodiscard]] Error::Api::Result<void> SetPrechargeSafetyTimer(PrechargeSafetyTimer value) const;
 
-        [[nodiscard]] Result<MilliAmperes> GetOtgCurrentLimit() const;
-        [[nodiscard]] Result<void> SetOtgCurrentLimit(MilliAmperes valueMa) const;
+        [[nodiscard]] Error::Api::Result<MilliAmperes> GetOtgCurrentLimit() const;
+        [[nodiscard]] Error::Api::Result<void> SetOtgCurrentLimit(MilliAmperes valueMa) const;
 
-        [[nodiscard]] Result<ThermalRegulation> GetThermalRegulationThreshold() const;
-        [[nodiscard]] Result<void> SetThermalRegulationThreshold(const ThermalRegulation& value) const;
+        [[nodiscard]] Error::Api::Result<ThermalRegulation> GetThermalRegulationThreshold() const;
+        [[nodiscard]] Error::Api::Result<void> SetThermalRegulationThreshold(const ThermalRegulation& value) const;
 
-        [[nodiscard]] Result<ThermalShutdown> GetThermalShutdownThreshold() const;
-        [[nodiscard]] Result<void> SetThermalShutdownThreshold(const ThermalShutdown& value) const;
+        [[nodiscard]] Error::Api::Result<ThermalShutdown> GetThermalShutdownThreshold() const;
+        [[nodiscard]] Error::Api::Result<void> SetThermalShutdownThreshold(const ThermalShutdown& value) const;
 
-        [[nodiscard]] Result<void> SetTsIgnore(bool value) const;
-        [[nodiscard]] Result<bool> GetTsIgnore() const;
+        [[nodiscard]] Error::Api::Result<void> SetTsIgnore(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> GetTsIgnore() const;
 
-        [[nodiscard]] Result<IbatReg> GetOtgMaxCurrent() const;
-        [[nodiscard]] Result<void> SetOtgMaxCurrent(IbatReg value) const;
+        [[nodiscard]] Error::Api::Result<IbatReg> GetOtgMaxCurrent() const;
+        [[nodiscard]] Error::Api::Result<void> SetOtgMaxCurrent(IbatReg value) const;
 
-        [[nodiscard]] Result<bool> IsSfetPresent() const;
-        [[nodiscard]] Result<void> SetSfetPresent(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> IsSfetPresent() const;
+        [[nodiscard]] Error::Api::Result<void> SetSfetPresent(bool value) const;
 
-        [[nodiscard]] Result<bool> IsDischargeCurrentSensingEnabled() const;
-        [[nodiscard]] Result<void> SetDischargeCurrentSensingEnabled(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> IsDischargeCurrentSensingEnabled() const;
+        [[nodiscard]] Error::Api::Result<void> SetDischargeCurrentSensingEnabled(bool value) const;
 
-        [[nodiscard]] Result<bool> IsIlimHizCurrentLimitEnabled() const;
-        [[nodiscard]] Result<void> SetIlimHizCurrentLimitEnabled(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> IsIlimHizCurrentLimitEnabled() const;
+        [[nodiscard]] Error::Api::Result<void> SetIlimHizCurrentLimitEnabled(bool value) const;
 
-        [[nodiscard]] Result<bool> IsDischargeOcpEnabled() const;
-        [[nodiscard]] Result<void> SetDischargeOcpEnabled(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> IsDischargeOcpEnabled() const;
+        [[nodiscard]] Error::Api::Result<void> SetDischargeOcpEnabled(bool value) const;
 
-        [[nodiscard]] Result<bool> GetWdRst() const;
-        [[nodiscard]] Result<void> SetWdRst(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> GetWdRst() const;
+        [[nodiscard]] Error::Api::Result<void> SetWdRst(bool value) const;
 
-        [[nodiscard]] Result<Watchdog> GetWatchdog() const;
-        [[nodiscard]] Result<void> SetWatchdog(Watchdog value) const;
+        [[nodiscard]] Error::Api::Result<Watchdog> GetWatchdog() const;
+        [[nodiscard]] Error::Api::Result<void> SetWatchdog(Watchdog value) const;
 
-        [[nodiscard]] Result<VacOvp> GetVacOvervoltageThreshold() const;
-        [[nodiscard]] Result<void> SetVacOvervoltageThreshold(VacOvp value) const;
+        [[nodiscard]] Error::Api::Result<VacOvp> GetVacOvervoltageThreshold() const;
+        [[nodiscard]] Error::Api::Result<void> SetVacOvervoltageThreshold(VacOvp value) const;
 
-        [[nodiscard]] Result<AdcSpeed> GetAdcSampleSpeed() const;
-        [[nodiscard]] Result<void> SetAdcSampleSpeed(AdcSpeed value) const;
+        [[nodiscard]] Error::Api::Result<AdcSpeed> GetAdcSampleSpeed() const;
+        [[nodiscard]] Error::Api::Result<void> SetAdcSampleSpeed(AdcSpeed value) const;
 
-        [[nodiscard]] Result<bool> IsAdcEnabled() const;
-        [[nodiscard]] Result<void> SetAdcEnabled(bool value) const;
+        [[nodiscard]] Error::Api::Result<bool> IsAdcEnabled() const;
+        [[nodiscard]] Error::Api::Result<void> SetAdcEnabled(bool value) const;
 
-        [[nodiscard]] Result<ChargerStatus0Flags> GetChargerStatus0() const;
-        [[nodiscard]] Result<ChargeStatus> GetChargeStatus() const;
-        [[nodiscard]] Result<VbusStatus> GetVbusStatus() const;
-        [[nodiscard]] Result<bool> IsBc12DetectionComplete() const;
-        [[nodiscard]] Result<IcoStatus> GetIcoStatus() const;
-        [[nodiscard]] Result<bool> IsInThermalRegulation() const;
-        [[nodiscard]] Result<bool> IsDpDmDetectionOngoing() const;
-        [[nodiscard]] Result<bool> IsBatteryPresent() const;
+        [[nodiscard]] Error::Api::Result<ChargerStatus0Flags> GetChargerStatus0() const;
+        [[nodiscard]] Error::Api::Result<ChargeStatus> GetChargeStatus() const;
+        [[nodiscard]] Error::Api::Result<VbusStatus> GetVbusStatus() const;
+        [[nodiscard]] Error::Api::Result<bool> IsBc12DetectionComplete() const;
+        [[nodiscard]] Error::Api::Result<IcoStatus> GetIcoStatus() const;
+        [[nodiscard]] Error::Api::Result<bool> IsInThermalRegulation() const;
+        [[nodiscard]] Error::Api::Result<bool> IsDpDmDetectionOngoing() const;
+        [[nodiscard]] Error::Api::Result<bool> IsBatteryPresent() const;
 
-        [[nodiscard]] Result<Fault0> GetFault0() const;
-        [[nodiscard]] Result<Fault1> GetFault1() const;
+        [[nodiscard]] Error::Api::Result<Fault0> GetFault0() const;
+        [[nodiscard]] Error::Api::Result<Fault1> GetFault1() const;
 
-        [[nodiscard]] Result<MilliAmperes> GetIbusCurrent() const;
-        [[nodiscard]] Result<MilliAmperes> GetIbatCurrent() const;
-        [[nodiscard]] Result<MilliVolts> GetVbusVoltage() const;
-        [[nodiscard]] Result<MilliVolts> GetVbatVoltage() const;
-        [[nodiscard]] Result<MilliVolts> GetVsysVoltage() const;
-        [[nodiscard]] Result<NormalizedIntFraction<16>> GetTsPercentage() const;
-        [[nodiscard]] Result<Celcius> GetDieTemperature() const;
-        [[nodiscard]] Result<MilliVolts> GetUsbDataPlusVoltage() const;
-        [[nodiscard]] Result<MilliVolts> GetUsbDataMinusVoltage() const;
+        [[nodiscard]] Error::Api::Result<MilliAmperes> GetIbusCurrent() const;
+        [[nodiscard]] Error::Api::Result<MilliAmperes> GetIbatCurrent() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetVbusVoltage() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetVbatVoltage() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetVsysVoltage() const;
+        [[nodiscard]] Error::Api::Result<NormalizedIntFraction<16>> GetTsPercentage() const;
+        [[nodiscard]] Error::Api::Result<Celcius> GetDieTemperature() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetUsbDataPlusVoltage() const;
+        [[nodiscard]] Error::Api::Result<MilliVolts> GetUsbDataMinusVoltage() const;
 
-        [[nodiscard]] Result<bool> IsAutomaticDpDmDetectionEnabled() const;
-        [[nodiscard]] Result<void> SetAutomaticDpDmDetectionEnabled(bool value) const;
-        [[nodiscard]] Result<void> ForceDpDmDetection() const;
+        [[nodiscard]] Error::Api::Result<bool> IsAutomaticDpDmDetectionEnabled() const;
+        [[nodiscard]] Error::Api::Result<void> SetAutomaticDpDmDetectionEnabled(bool value) const;
+        [[nodiscard]] Error::Api::Result<void> ForceDpDmDetection() const;
 
-        [[nodiscard]] Result<DpDac> GetDpDac() const;
-        [[nodiscard]] Result<void> SetDpDac(DpDac value) const;
-        [[nodiscard]] Result<DmDac> GetDmDac() const;
-        [[nodiscard]] Result<void> SetDmDac(DmDac value) const;
+        [[nodiscard]] Error::Api::Result<DpDac> GetDpDac() const;
+        [[nodiscard]] Error::Api::Result<void> SetDpDac(DpDac value) const;
+        [[nodiscard]] Error::Api::Result<DmDac> GetDmDac() const;
+        [[nodiscard]] Error::Api::Result<void> SetDmDac(DmDac value) const;
 
     private:
         constexpr static size_t MemorySize = 0x49;
@@ -491,30 +489,30 @@ namespace PiSubmarine::Bq25792
         I2C::Api::IDriver& m_Driver;
 
         template <typename T>
-        Result<void> Read(T reg, uint8_t* data, size_t size) const
+        Error::Api::Result<void> Read(T reg, std::span<uint8_t> data) const
         {
-            return Read(static_cast<uint8_t>(reg), data, size);
+            return Read(static_cast<uint8_t>(reg), data);
         }
 
-        Result<void> Read(uint8_t offset, uint8_t* data, size_t size) const;
+        Error::Api::Result<void> Read(uint8_t offset, std::span<uint8_t> data) const;
 
         template <typename T>
-        Result<void> Write(T reg, uint8_t* data, size_t size) const
+        Error::Api::Result<void> Write(T reg, uint8_t* data, size_t size) const
         {
             return Write(static_cast<uint8_t>(reg), data, size);
         }
 
-        Result<void> Write(uint8_t offset, uint8_t* data, size_t size) const;
+        Error::Api::Result<void> Write(uint8_t offset, uint8_t* data, size_t size) const;
 
         template <RegOffset Reg>
         auto ReadField(size_t Start, size_t Num) const
-            -> Result<RegisterType_t<GetRegisterSize(Reg)>>
+            -> Error::Api::Result<RegisterType_t<GetRegisterSize(Reg)>>
         {
             using ReturnType = RegisterType_t<GetRegisterSize(Reg)>;
 
             std::array<uint8_t, GetRegisterSize(Reg)> regBytes;
 
-            auto readResult = Read(Reg, regBytes.data(), regBytes.size());
+            auto readResult = Read(Reg, regBytes);
             if (!readResult.has_value())
             {
                 return std::unexpected(readResult.error());
@@ -524,10 +522,10 @@ namespace PiSubmarine::Bq25792
         }
 
         template <RegOffset Reg, typename T>
-        Result<void> WriteField(T value, size_t Start, size_t Num) const
+        Error::Api::Result<void> WriteField(T value, size_t Start, size_t Num) const
         {
             std::array<uint8_t, GetRegisterSize(Reg)> regBytes;
-            auto readResult = Read(Reg, regBytes.data(), regBytes.size());
+            auto readResult = Read(Reg, regBytes);
             if (!readResult.has_value())
             {
                 return std::unexpected(readResult.error());
@@ -537,7 +535,7 @@ namespace PiSubmarine::Bq25792
         }
 
         template <RegOffset Reg, typename T>
-        auto ReadFieldEnum(size_t start, size_t num) const -> Result<T>
+        auto ReadFieldEnum(size_t start, size_t num) const -> Error::Api::Result<T>
         {
             auto field = ReadField<Reg>(start, num);
             if (!field.has_value())
@@ -548,13 +546,13 @@ namespace PiSubmarine::Bq25792
         }
 
         template <RegOffset Reg, typename T>
-        Result<void> WriteFieldEnum(T value, size_t start, size_t num) const
+        Error::Api::Result<void> WriteFieldEnum(T value, size_t start, size_t num) const
         {
             return WriteField<Reg>(static_cast<std::underlying_type_t<T>>(value), start, num);
         }
 
         template <RegOffset Reg, typename T>
-        auto ReadFieldUnit(size_t start, size_t num, T offset, T bitStep) const -> Result<T>
+        auto ReadFieldUnit(size_t start, size_t num, T offset, T bitStep) const -> Error::Api::Result<T>
         {
             auto unit = ReadField<Reg>(start, num);
             if (!unit.has_value())
@@ -565,7 +563,7 @@ namespace PiSubmarine::Bq25792
         }
 
         template <RegOffset Reg, typename T>
-        Result<void> WriteFieldUnit(size_t start, size_t num, T value, T offset, T bitStep) const
+        Error::Api::Result<void> WriteFieldUnit(size_t start, size_t num, T value, T offset, T bitStep) const
         {
             auto valueReg = (value.Value - offset.Value) / bitStep.Value;
             return WriteField<Reg>(valueReg, start, num);
