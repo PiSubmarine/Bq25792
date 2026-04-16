@@ -2,23 +2,18 @@
 
 #include <functional>
 #include <chrono>
-#include <expected>
 #include <array>
 #include "PiSubmarine/RegUtils.h"
 #include "PiSubmarine/Bq25792/Units.h"
 #include "PiSubmarine/NormalizedIntFraction.h"
+#include "PiSubmarine/Error/Api/Result.h"
 #include "PiSubmarine/I2C/Api/IDriver.h"
 
 namespace PiSubmarine::Bq25792
 {
     using WaitFunc = std::function<void(std::chrono::milliseconds)>;
-
-    enum class ProtocolError
-    {
-        Ok,
-        WriteError,
-        ReadError
-    };
+    template <typename T>
+    using Result = PiSubmarine::Error::Api::Result<T>;
 
     enum class RegOffset : uint8_t
     {
@@ -329,20 +324,20 @@ namespace PiSubmarine::Bq25792
         /// Gets Minimal System Voltage (VSYSMIN)
         /// </summary>
         /// <returns>VSYSMIN in mV.</returns>
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetMinimalSystemVoltage() const;
+        [[nodiscard]] Result<MilliVolts> GetMinimalSystemVoltage() const;
 
         /// <summary>
         /// Sets minimal system voltage. Range: 2500mV - 16000mV, bit step size: 250mV
         /// </summary>
         /// <param name="valueMv">Voltage in mV</param>
-        [[nodiscard]] ProtocolError SetMinimalSystemVoltage(MilliVolts valueMv) const;
+        [[nodiscard]] Result<void> SetMinimalSystemVoltage(MilliVolts valueMv) const;
 
 
         /// <summary>
         /// Gets battery charge voltage limit.
         /// </summary>
         /// <returns>Charge voltage limit in mV</returns>
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetChargeVoltageLimit() const;
+        [[nodiscard]] Result<MilliVolts> GetChargeVoltageLimit() const;
 
 
         /// <summary>
@@ -350,145 +345,145 @@ namespace PiSubmarine::Bq25792
         /// </summary>
         /// <param name="value">Charge voltage limit in mV. Range: 3000mV - 18800mV, bit step size: 10mV</param>
         /// <returns></returns>
-        [[nodiscard]] ProtocolError SetChargeVoltageLimit(MilliVolts value) const;
+        [[nodiscard]] Result<void> SetChargeVoltageLimit(MilliVolts value) const;
 
         /// <summary>
         /// Gets maximum charge current.
         /// </summary>
         /// <returns>Current in mA</returns>
-        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetChargeCurrentLimit() const;
+        [[nodiscard]] Result<MilliAmperes> GetChargeCurrentLimit() const;
 
         /// <summary>
         /// Sets maximum charge current. Range: 50mA - 5000mA, bit step size: 10mA.
         /// </summary>
         /// <param name="valueMa">Current in mA</param>
-        [[nodiscard]] ProtocolError SetChargeCurrentLimit(MilliAmperes valueMa) const;
+        [[nodiscard]] Result<void> SetChargeCurrentLimit(MilliAmperes valueMa) const;
 
 
         /// <summary>
         /// Gets DPM Input Voltage Limit. See 9.3.8.2.
         /// </summary>
         /// <returns>VINDPM in mV</returns>
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetDynamicPowerManagementInputVoltageLimit() const;
+        [[nodiscard]] Result<MilliVolts> GetDynamicPowerManagementInputVoltageLimit() const;
 
 
         /// <summary>
         /// Sets DPM Input Voltage Limit. See 9.3.8.2.
         /// </summary>
         /// <param name="valueMv">Value in mV. Range: 3600mV - 22000mV. Bit step size: 100mV.</param>
-        /// <returns>ProtocolError</returns>
-        [[nodiscard]] ProtocolError SetDynamicPowerManagementInputVoltageLimit(MilliVolts valueMv) const;
+        /// <returns>Operation result.</returns>
+        [[nodiscard]] Result<void> SetDynamicPowerManagementInputVoltageLimit(MilliVolts valueMv) const;
 
         /// <summary>
         /// Gets DPM Input Current Limit. See 9.3.8.2.
         /// </summary>
         /// <returns>IINDPM in mA</returns>
-        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetDynamicPowerManagementInputCurrentLimit() const;
+        [[nodiscard]] Result<MilliAmperes> GetDynamicPowerManagementInputCurrentLimit() const;
 
         /// <summary>
         /// Sets DPM Input Current Limit. See 9.3.8.2.
         /// </summary>
         /// <param name="valueMa">Value in mA. Range: 100mA - 3300mA. Bit step size: 10mA.</param>
-        /// <returns>ProtocolError</returns>
-        [[nodiscard]] ProtocolError SetDynamicPowerManagementInputCurrentLimit(MilliAmperes valueMa) const;
+        /// <returns>Operation result.</returns>
+        [[nodiscard]] Result<void> SetDynamicPowerManagementInputCurrentLimit(MilliAmperes valueMa) const;
 
-        [[nodiscard]] std::expected<PrechargeControl, ProtocolError> GetPrechargeControl() const;
+        [[nodiscard]] Result<PrechargeControl> GetPrechargeControl() const;
 
-        [[nodiscard]] ProtocolError SetPrechargeControl(const PrechargeControl& value) const;
+        [[nodiscard]] Result<void> SetPrechargeControl(const PrechargeControl& value) const;
 
-        [[nodiscard]] ProtocolError Reset() const;
+        [[nodiscard]] Result<void> Reset() const;
 
-        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetTerminationCurrent() const;
+        [[nodiscard]] Result<MilliAmperes> GetTerminationCurrent() const;
 
-        [[nodiscard]] ProtocolError SetTerminationCurrent(MilliAmperes valueMa) const;
+        [[nodiscard]] Result<void> SetTerminationCurrent(MilliAmperes valueMa) const;
 
-        [[nodiscard]] std::expected<Cells, ProtocolError> GetCells() const;
-        [[nodiscard]] ProtocolError SetCells(const Cells& value) const;
+        [[nodiscard]] Result<Cells> GetCells() const;
+        [[nodiscard]] Result<void> SetCells(const Cells& value) const;
 
-        [[nodiscard]] std::expected<RechargeDeglichTime, ProtocolError> GetRechargeDeglichTime() const;
-        [[nodiscard]] ProtocolError SetCells(const RechargeDeglichTime& value) const;
+        [[nodiscard]] Result<RechargeDeglichTime> GetRechargeDeglichTime() const;
+        [[nodiscard]] Result<void> SetCells(const RechargeDeglichTime& value) const;
 
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetRechargeThresholdOffset() const;
-        [[nodiscard]] ProtocolError SetRechargeThresholdOffset(MilliVolts valueMv) const;
+        [[nodiscard]] Result<MilliVolts> GetRechargeThresholdOffset() const;
+        [[nodiscard]] Result<void> SetRechargeThresholdOffset(MilliVolts valueMv) const;
 
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetOtgRegulationVoltage() const;
-        [[nodiscard]] ProtocolError SetOtgRegulationVoltage(MilliVolts valueMv) const;
+        [[nodiscard]] Result<MilliVolts> GetOtgRegulationVoltage() const;
+        [[nodiscard]] Result<void> SetOtgRegulationVoltage(MilliVolts valueMv) const;
 
-        [[nodiscard]] std::expected<PrechargeSafetyTimer, ProtocolError> GetPrechargeSafetyTimer() const;
-        [[nodiscard]] ProtocolError SetPrechargeSafetyTimer(PrechargeSafetyTimer value) const;
+        [[nodiscard]] Result<PrechargeSafetyTimer> GetPrechargeSafetyTimer() const;
+        [[nodiscard]] Result<void> SetPrechargeSafetyTimer(PrechargeSafetyTimer value) const;
 
-        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetOtgCurrentLimit() const;
-        [[nodiscard]] ProtocolError SetOtgCurrentLimit(MilliAmperes valueMa) const;
+        [[nodiscard]] Result<MilliAmperes> GetOtgCurrentLimit() const;
+        [[nodiscard]] Result<void> SetOtgCurrentLimit(MilliAmperes valueMa) const;
 
-        [[nodiscard]] std::expected<ThermalRegulation, ProtocolError> GetThermalRegulationThreshold() const;
-        [[nodiscard]] ProtocolError SetThermalRegulationThreshold(const ThermalRegulation& value) const;
+        [[nodiscard]] Result<ThermalRegulation> GetThermalRegulationThreshold() const;
+        [[nodiscard]] Result<void> SetThermalRegulationThreshold(const ThermalRegulation& value) const;
 
-        [[nodiscard]] std::expected<ThermalShutdown, ProtocolError> GetThermalShutdownThreshold() const;
-        [[nodiscard]] ProtocolError SetThermalShutdownThreshold(const ThermalShutdown& value) const;
+        [[nodiscard]] Result<ThermalShutdown> GetThermalShutdownThreshold() const;
+        [[nodiscard]] Result<void> SetThermalShutdownThreshold(const ThermalShutdown& value) const;
 
-        [[nodiscard]] ProtocolError SetTsIgnore(bool value) const;
-        [[nodiscard]] std::expected<bool, ProtocolError> GetTsIgnore() const;
+        [[nodiscard]] Result<void> SetTsIgnore(bool value) const;
+        [[nodiscard]] Result<bool> GetTsIgnore() const;
 
-        [[nodiscard]] std::expected<IbatReg, ProtocolError> GetOtgMaxCurrent() const;
-        [[nodiscard]] ProtocolError SetOtgMaxCurrent(IbatReg value) const;
+        [[nodiscard]] Result<IbatReg> GetOtgMaxCurrent() const;
+        [[nodiscard]] Result<void> SetOtgMaxCurrent(IbatReg value) const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> IsSfetPresent() const;
-        [[nodiscard]] ProtocolError SetSfetPresent(bool value) const;
+        [[nodiscard]] Result<bool> IsSfetPresent() const;
+        [[nodiscard]] Result<void> SetSfetPresent(bool value) const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> IsDischargeCurrentSensingEnabled() const;
-        [[nodiscard]] ProtocolError SetDischargeCurrentSensingEnabled(bool value) const;
+        [[nodiscard]] Result<bool> IsDischargeCurrentSensingEnabled() const;
+        [[nodiscard]] Result<void> SetDischargeCurrentSensingEnabled(bool value) const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> IsIlimHizCurrentLimitEnabled() const;
-        [[nodiscard]] ProtocolError SetIlimHizCurrentLimitEnabled(bool value) const;
+        [[nodiscard]] Result<bool> IsIlimHizCurrentLimitEnabled() const;
+        [[nodiscard]] Result<void> SetIlimHizCurrentLimitEnabled(bool value) const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> IsDischargeOcpEnabled() const;
-        [[nodiscard]] ProtocolError SetDischargeOcpEnabled(bool value) const;
+        [[nodiscard]] Result<bool> IsDischargeOcpEnabled() const;
+        [[nodiscard]] Result<void> SetDischargeOcpEnabled(bool value) const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> GetWdRst() const;
-        [[nodiscard]] ProtocolError SetWdRst(bool value) const;
+        [[nodiscard]] Result<bool> GetWdRst() const;
+        [[nodiscard]] Result<void> SetWdRst(bool value) const;
 
-        [[nodiscard]] std::expected<Watchdog, ProtocolError> GetWatchdog() const;
-        [[nodiscard]] ProtocolError SetWatchdog(Watchdog value) const;
+        [[nodiscard]] Result<Watchdog> GetWatchdog() const;
+        [[nodiscard]] Result<void> SetWatchdog(Watchdog value) const;
 
-        [[nodiscard]] std::expected<VacOvp, ProtocolError> GetVacOvervoltageThreshold() const;
-        [[nodiscard]] ProtocolError SetVacOvervoltageThreshold(VacOvp value) const;
+        [[nodiscard]] Result<VacOvp> GetVacOvervoltageThreshold() const;
+        [[nodiscard]] Result<void> SetVacOvervoltageThreshold(VacOvp value) const;
 
-        [[nodiscard]] std::expected<AdcSpeed, ProtocolError> GetAdcSampleSpeed() const;
-        [[nodiscard]] ProtocolError SetAdcSampleSpeed(AdcSpeed value) const;
+        [[nodiscard]] Result<AdcSpeed> GetAdcSampleSpeed() const;
+        [[nodiscard]] Result<void> SetAdcSampleSpeed(AdcSpeed value) const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> IsAdcEnabled() const;
-        [[nodiscard]] ProtocolError SetAdcEnabled(bool value) const;
+        [[nodiscard]] Result<bool> IsAdcEnabled() const;
+        [[nodiscard]] Result<void> SetAdcEnabled(bool value) const;
 
-        [[nodiscard]] std::expected<ChargerStatus0Flags, ProtocolError> GetChargerStatus0() const;
-        [[nodiscard]] std::expected<ChargeStatus, ProtocolError> GetChargeStatus() const;
-        [[nodiscard]] std::expected<VbusStatus, ProtocolError> GetVbusStatus() const;
-        [[nodiscard]] std::expected<bool, ProtocolError> IsBc12DetectionComplete() const;
-        [[nodiscard]] std::expected<IcoStatus, ProtocolError> GetIcoStatus() const;
-        [[nodiscard]] std::expected<bool, ProtocolError> IsInThermalRegulation() const;
-        [[nodiscard]] std::expected<bool, ProtocolError> IsDpDmDetectionOngoing() const;
-        [[nodiscard]] std::expected<bool, ProtocolError> IsBatteryPresent() const;
+        [[nodiscard]] Result<ChargerStatus0Flags> GetChargerStatus0() const;
+        [[nodiscard]] Result<ChargeStatus> GetChargeStatus() const;
+        [[nodiscard]] Result<VbusStatus> GetVbusStatus() const;
+        [[nodiscard]] Result<bool> IsBc12DetectionComplete() const;
+        [[nodiscard]] Result<IcoStatus> GetIcoStatus() const;
+        [[nodiscard]] Result<bool> IsInThermalRegulation() const;
+        [[nodiscard]] Result<bool> IsDpDmDetectionOngoing() const;
+        [[nodiscard]] Result<bool> IsBatteryPresent() const;
 
-        [[nodiscard]] std::expected<Fault0, ProtocolError> GetFault0() const;
-        [[nodiscard]] std::expected<Fault1, ProtocolError> GetFault1() const;
+        [[nodiscard]] Result<Fault0> GetFault0() const;
+        [[nodiscard]] Result<Fault1> GetFault1() const;
 
-        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetIbusCurrent() const;
-        [[nodiscard]] std::expected<MilliAmperes, ProtocolError> GetIbatCurrent() const;
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVbusVoltage() const;
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVbatVoltage() const;
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetVsysVoltage() const;
-        [[nodiscard]] std::expected<NormalizedIntFraction<16>, ProtocolError> GetTsPercentage() const;
-        [[nodiscard]] std::expected<Celcius, ProtocolError> GetDieTemperature() const;
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetUsbDataPlusVoltage() const;
-        [[nodiscard]] std::expected<MilliVolts, ProtocolError> GetUsbDataMinusVoltage() const;
+        [[nodiscard]] Result<MilliAmperes> GetIbusCurrent() const;
+        [[nodiscard]] Result<MilliAmperes> GetIbatCurrent() const;
+        [[nodiscard]] Result<MilliVolts> GetVbusVoltage() const;
+        [[nodiscard]] Result<MilliVolts> GetVbatVoltage() const;
+        [[nodiscard]] Result<MilliVolts> GetVsysVoltage() const;
+        [[nodiscard]] Result<NormalizedIntFraction<16>> GetTsPercentage() const;
+        [[nodiscard]] Result<Celcius> GetDieTemperature() const;
+        [[nodiscard]] Result<MilliVolts> GetUsbDataPlusVoltage() const;
+        [[nodiscard]] Result<MilliVolts> GetUsbDataMinusVoltage() const;
 
-        [[nodiscard]] std::expected<bool, ProtocolError> IsAutomaticDpDmDetectionEnabled() const;
-        [[nodiscard]] ProtocolError SetAutomaticDpDmDetectionEnabled(bool value) const;
-        [[nodiscard]] ProtocolError ForceDpDmDetection() const;
+        [[nodiscard]] Result<bool> IsAutomaticDpDmDetectionEnabled() const;
+        [[nodiscard]] Result<void> SetAutomaticDpDmDetectionEnabled(bool value) const;
+        [[nodiscard]] Result<void> ForceDpDmDetection() const;
 
-        [[nodiscard]] std::expected<DpDac, ProtocolError> GetDpDac() const;
-        [[nodiscard]] ProtocolError SetDpDac(DpDac value) const;
-        [[nodiscard]] std::expected<DmDac, ProtocolError> GetDmDac() const;
-        [[nodiscard]] ProtocolError SetDmDac(DmDac value) const;
+        [[nodiscard]] Result<DpDac> GetDpDac() const;
+        [[nodiscard]] Result<void> SetDpDac(DpDac value) const;
+        [[nodiscard]] Result<DmDac> GetDmDac() const;
+        [[nodiscard]] Result<void> SetDmDac(DmDac value) const;
 
     private:
         constexpr static size_t MemorySize = 0x49;
@@ -496,53 +491,53 @@ namespace PiSubmarine::Bq25792
         I2C::Api::IDriver& m_Driver;
 
         template <typename T>
-        ProtocolError Read(T reg, uint8_t* data, size_t size) const
+        Result<void> Read(T reg, uint8_t* data, size_t size) const
         {
             return Read(static_cast<uint8_t>(reg), data, size);
         }
 
-        ProtocolError Read(uint8_t offset, uint8_t* data, size_t size) const;
+        Result<void> Read(uint8_t offset, uint8_t* data, size_t size) const;
 
         template <typename T>
-        ProtocolError Write(T reg, uint8_t* data, size_t size) const
+        Result<void> Write(T reg, uint8_t* data, size_t size) const
         {
             return Write(static_cast<uint8_t>(reg), data, size);
         }
 
-        ProtocolError Write(uint8_t offset, uint8_t* data, size_t size) const;
+        Result<void> Write(uint8_t offset, uint8_t* data, size_t size) const;
 
         template <RegOffset Reg>
         auto ReadField(size_t Start, size_t Num) const
-            -> std::expected<RegisterType_t<GetRegisterSize(Reg)>, ProtocolError>
+            -> Result<RegisterType_t<GetRegisterSize(Reg)>>
         {
             using ReturnType = RegisterType_t<GetRegisterSize(Reg)>;
 
             std::array<uint8_t, GetRegisterSize(Reg)> regBytes;
 
-            ProtocolError error = Read(Reg, regBytes.data(), regBytes.size());
-            if (error != ProtocolError::Ok)
+            auto readResult = Read(Reg, regBytes.data(), regBytes.size());
+            if (!readResult.has_value())
             {
-                return std::unexpected(error);
+                return std::unexpected(readResult.error());
             }
 
             return RegUtils::ReadInt<ReturnType, std::endian::big>(regBytes.data(), Start, Num);
         }
 
         template <RegOffset Reg, typename T>
-        ProtocolError WriteField(T value, size_t Start, size_t Num) const
+        Result<void> WriteField(T value, size_t Start, size_t Num) const
         {
             std::array<uint8_t, GetRegisterSize(Reg)> regBytes;
-            ProtocolError error = Read(Reg, regBytes.data(), regBytes.size());
-            if (error != ProtocolError::Ok)
+            auto readResult = Read(Reg, regBytes.data(), regBytes.size());
+            if (!readResult.has_value())
             {
-                return error;
+                return std::unexpected(readResult.error());
             }
             RegUtils::WriteInt<T, std::endian::big>(value, regBytes.data(), Start, Num);
             return Write(Reg, regBytes.data(), regBytes.size());
         }
 
         template <RegOffset Reg, typename T>
-        auto ReadFieldEnum(size_t start, size_t num) const -> std::expected<T, ProtocolError>
+        auto ReadFieldEnum(size_t start, size_t num) const -> Result<T>
         {
             auto field = ReadField<Reg>(start, num);
             if (!field.has_value())
@@ -553,13 +548,13 @@ namespace PiSubmarine::Bq25792
         }
 
         template <RegOffset Reg, typename T>
-        ProtocolError WriteFieldEnum(T value, size_t start, size_t num) const
+        Result<void> WriteFieldEnum(T value, size_t start, size_t num) const
         {
             return WriteField<Reg>(static_cast<std::underlying_type_t<T>>(value), start, num);
         }
 
         template <RegOffset Reg, typename T>
-        auto ReadFieldUnit(size_t start, size_t num, T offset, T bitStep) const -> std::expected<T, ProtocolError>
+        auto ReadFieldUnit(size_t start, size_t num, T offset, T bitStep) const -> Result<T>
         {
             auto unit = ReadField<Reg>(start, num);
             if (!unit.has_value())
@@ -570,7 +565,7 @@ namespace PiSubmarine::Bq25792
         }
 
         template <RegOffset Reg, typename T>
-        ProtocolError WriteFieldUnit(size_t start, size_t num, T value, T offset, T bitStep) const
+        Result<void> WriteFieldUnit(size_t start, size_t num, T value, T offset, T bitStep) const
         {
             auto valueReg = (value.Value - offset.Value) / bitStep.Value;
             return WriteField<Reg>(valueReg, start, num);

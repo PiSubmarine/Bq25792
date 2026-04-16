@@ -9,6 +9,9 @@ PiSubmarineInitTarget(PiSubmarine.Bq25792)
 PiSubmarineAddDependency("https://github.com/PiSubmarine/RegUtils" "")
 target_link_libraries(PiSubmarine.Bq25792 PUBLIC PiSubmarine.RegUtils)
 
+PiSubmarineAddDependency("https://github.com/PiSubmarine/Error.Api.git" "")
+target_link_libraries(PiSubmarine.Bq25792 PUBLIC PiSubmarine.Error.Api)
+
 PiSubmarineAddDependency("https://github.com/PiSubmarine/I2C.Api" "")
 target_link_libraries(PiSubmarine.Bq25792 PUBLIC PiSubmarine.I2C.Api)
 
