@@ -1,6 +1,6 @@
 #include <span>
 #include <vector>
-
+#include <cstring> // needed for memcpy on STM32
 #include "PiSubmarine/Bq25792/Device.h"
 
 namespace PiSubmarine::Bq25792
