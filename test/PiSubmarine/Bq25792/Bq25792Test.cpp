@@ -2,6 +2,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 #include <gtest/gtest.h>
 
@@ -18,51 +19,47 @@ namespace PiSubmarine::Bq25792
 
 		[[nodiscard]] PiSubmarine::Error::Api::Result<void> Write(
 			const uint8_t deviceAddress,
-			uint8_t* const txData,
-			const std::size_t len) override
+			const std::span<const uint8_t> txData) override
 		{
 			EXPECT_EQ(deviceAddress, Device::Address);
-			EXPECT_NE(txData, nullptr);
+			EXPECT_FALSE(txData.size() > 0 && txData.data() == nullptr);
 
-			if (len == 1)
+			if (txData.size() == 1)
 			{
 				m_ReadOffset = txData[0];
 				return {};
 			}
 
-			EXPECT_GT(len, 1U);
+			EXPECT_GT(txData.size(), 1U);
 
 			const auto offset = static_cast<std::size_t>(txData[0]);
-			std::copy_n(txData + 1, len - 1, m_Registers.begin() + offset);
+			std::copy_n(txData.begin() + 1, txData.size() - 1, m_Registers.begin() + offset);
 			return {};
 		}
 
 		[[nodiscard]] PiSubmarine::Error::Api::Result<void> Read(
 			const uint8_t deviceAddress,
-			uint8_t* const rxData,
-			const std::size_t len) override
+			const std::span<uint8_t> rxData) override
 		{
 			EXPECT_EQ(deviceAddress, Device::Address);
-			EXPECT_NE(rxData, nullptr);
+			EXPECT_FALSE(rxData.size() > 0 && rxData.data() == nullptr);
 
-			std::copy_n(m_Registers.begin() + m_ReadOffset, len, rxData);
+			std::copy_n(m_Registers.begin() + m_ReadOffset, rxData.size(), rxData.begin());
 			return {};
 		}
 
 		[[nodiscard]] PiSubmarine::Error::Api::Result<void> WriteRead(
 			const uint8_t deviceAddress,
-			uint8_t* const txData,
-			const std::size_t txLen,
-			uint8_t* const rxData,
-			const std::size_t rxLen) override
+			const std::span<const uint8_t> txData,
+			const std::span<uint8_t> rxData) override
 		{
-			auto writeResult = Write(deviceAddress, txData, txLen);
+			auto writeResult = Write(deviceAddress, txData);
 			if (!writeResult.has_value())
 			{
 				return std::unexpected(writeResult.error());
 			}
 
-			return Read(deviceAddress, rxData, rxLen);
+			return Read(deviceAddress, rxData);
 		}
 
 	private:

@@ -1,3 +1,4 @@
+#include <span>
 #include <vector>
 
 #include "PiSubmarine/Bq25792/Device.h"
@@ -523,16 +524,16 @@ namespace PiSubmarine::Bq25792
 		return WriteFieldEnum<RegOffset::DpDmDriver>(value, 5, 3);
 	}
 
-	Result<void> Device::Read(uint8_t offset, uint8_t* data, size_t size) const
-	{
-		auto writeResult = m_Driver.Write(Address, &offset, 1);
-		if (!writeResult.has_value())
-		{
-			return std::unexpected(writeResult.error());
-		}
+    Result<void> Device::Read(uint8_t offset, uint8_t* data, size_t size) const
+    {
+        auto writeResult = m_Driver.Write(Address, std::span<const uint8_t>(&offset, 1));
+        if (!writeResult.has_value())
+        {
+            return std::unexpected(writeResult.error());
+        }
 
-		return m_Driver.Read(Address, data, size);
-	}
+        return m_Driver.Read(Address, std::span<uint8_t>(data, size));
+    }
 
 	Result<void> Device::Write(uint8_t offset, uint8_t* data, size_t size) const
 	{
@@ -541,6 +542,6 @@ namespace PiSubmarine::Bq25792
 		buffer[0] = offset;
 		std::memcpy(buffer.data() + 1, data, size);
 
-		return m_Driver.Write(Address, buffer.data(), buffer.size());
-	}
+        return m_Driver.Write(Address, std::span<const uint8_t>(buffer.data(), buffer.size()));
+    }
 }
